@@ -1,0 +1,447 @@
+// Schema dati Caffè Network
+// Fase 1 (e-commerce) + Fase 2 (MLM provvigioni unilevel) attive; Fase 3/4 (B2B, LMS)
+// sono già modellate ma la logica arriverà dopo.
+// Target: PostgreSQL (Neon). Vedi CLAUDE.md per il setup.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────
+// UTENTI & RUOLI (attivi: CUSTOMER + ADMIN; RESELLER predisposto)
+// Nota: le provvigioni NON dipendono dal ruolo — chiunque abbia una downline matura.
+// ─────────────────────────────────────────────────────────────
+
+enum Role {
+  CUSTOMER
+  CONSULTANT
+  RESELLER
+  ADMIN
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String?
+  name         String?
+  role         Role     @default(CUSTOMER)
+
+  // Albero Unilevel: chi ha sponsorizzato questo utente.
+  sponsorId    String?
+  sponsor      User?    @relation("Downline", fields: [sponsorId], references: [id])
+  referrals    User[]   @relation("Downline")
+  // Il default cuid() è una rete di sicurezza: in registrazione si passa un codice
+  // leggibile generato da src/lib/referral.ts.
+  referralCode String   @unique @default(cuid())
+
+  addresses    Address[]
+  orders       Order[]
+  carts        Cart[]
+
+  commissionAccount  CommissionAccount?
+  commissionsAsBuyer Commission[]       @relation("CommissionBuyer")
+
+  // Profili opzionali per le fasi successive (1:1)
+  consultantProfile ConsultantProfile?
+  resellerProfile   ResellerProfile?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([sponsorId])
+}
+
+model Address {
+  id         String  @id @default(cuid())
+  userId     String
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName   String
+  line1      String
+  line2      String?
+  city       String
+  province   String
+  postalCode String
+  country    String  @default("IT")
+  phone      String?
+  isDefault  Boolean @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// CATALOGO
+// ─────────────────────────────────────────────────────────────
+
+model Category {
+  id        String    @id @default(cuid())
+  slug      String    @unique
+  name      String
+  position  Int       @default(0)
+  products  Product[]
+}
+
+enum RoastLevel {
+  LIGHT
+  MEDIUM
+  DARK
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String
+  origin      String?
+  roastLevel  RoastLevel?
+  images      String[]           // URL immagini (placeholder in MVP)
+  active      Boolean  @default(true)
+  featured    Boolean  @default(false)
+
+  categoryId  String?
+  category    Category? @relation(fields: [categoryId], references: [id])
+
+  variants    ProductVariant[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([categoryId])
+}
+
+model ProductVariant {
+  id         String  @id @default(cuid())
+  productId  String
+  product    Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sku        String  @unique
+  name       String            // es. "Grani 250g", "Macinato 1kg"
+  priceCents Int
+  stock      Int     @default(0)
+  // Unità provvigionabili per pezzo: 0 = accessorio escluso, 2 = bundle doppio.
+  commissionUnits Int @default(1)
+
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  @@index([productId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// CARRELLO
+// ─────────────────────────────────────────────────────────────
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String?
+  user      User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  token     String     @unique   // per carrelli anonimi (cookie)
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([userId])
+}
+
+model CartItem {
+  id        String         @id @default(cuid())
+  cartId    String
+  cart      Cart           @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  variantId String
+  variant   ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  quantity  Int            @default(1)
+
+  @@unique([cartId, variantId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// ORDINI & PAGAMENTI
+// ─────────────────────────────────────────────────────────────
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model Order {
+  id             String      @id @default(cuid())
+  number         Int         @unique @default(autoincrement())
+  userId         String?
+  user           User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  email          String
+  status         OrderStatus @default(PENDING)
+
+  items          OrderItem[]
+
+  subtotalCents  Int
+  shippingCents  Int         @default(0)
+  discountCents  Int         @default(0)  // sconto da coupon
+  totalCents     Int
+
+  shippingName    String
+  shippingLine1   String
+  shippingLine2   String?
+  shippingCity    String
+  shippingProvince String
+  shippingPostal  String
+  shippingCountry String     @default("IT")
+
+  payment        Payment?
+  commissions    Commission[]
+
+  // Impostata dall'admin al passaggio in DELIVERED: fa partire il conto alla
+  // rovescia di maturazione delle provvigioni.
+  deliveredAt    DateTime?
+
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@index([userId])
+}
+
+model OrderItem {
+  id         String         @id @default(cuid())
+  orderId    String
+  order      Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variantId  String?
+  variant    ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  // snapshot prezzi/nome al momento dell'ordine
+  name       String
+  sku        String
+  priceCents Int
+  quantity   Int
+  // Snapshot: la variante può cambiare o sparire (SetNull) senza riscrivere lo storico.
+  commissionUnits Int @default(1)
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+model Payment {
+  id                    String        @id @default(cuid())
+  orderId               String        @unique
+  order                 Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  provider              String        @default("stripe")
+  stripePaymentIntentId String?       @unique
+  stripeSessionId       String?       @unique
+  amountCents           Int
+  status                PaymentStatus @default(PENDING)
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+}
+
+// ─────────────────────────────────────────────────────────────
+// PROVVIGIONI MLM UNILEVEL (Fase 2)
+//
+// Ledger immutabile + saldi denormalizzati sulla riga account.
+// REGOLA: i saldi su CommissionAccount sono una CACHE per la UI; la fonte di
+// verità è sempre la somma del ledger. Ogni operazione che muove denaro
+// (prelievo, storno) ricalcola i saldi dal ledger dentro la propria transazione.
+// ─────────────────────────────────────────────────────────────
+
+enum CommissionStatus {
+  PENDING   // maturata ma non ancora prelevabile (finestra resi)
+  APPROVED  // prelevabile
+  PAID      // liquidata al consulente
+  REVERSED  // stornata (ordine annullato)
+}
+
+enum CommissionReason {
+  ORDER
+  ADMIN_ADJUST
+}
+
+enum PayoutStatus {
+  REQUESTED
+  PAID
+  REJECTED
+}
+
+model CommissionAccount {
+  id             String @id @default(cuid())
+  userId         String @unique
+  user           User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  pendingCents   Int    @default(0)  // PENDING
+  availableCents Int    @default(0)  // APPROVED senza richiesta aperta
+  requestedCents Int    @default(0)  // APPROVED agganciato a una PayoutRequest aperta
+  paidCents      Int    @default(0)  // PAID
+
+  commissions    Commission[]
+  payoutRequests PayoutRequest[]
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Commission {
+  id              String            @id @default(cuid())
+  accountId       String
+  account         CommissionAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  orderId         String?
+  order           Order?            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  buyerId         String?
+  buyer           User?             @relation("CommissionBuyer", fields: [buyerId], references: [id], onDelete: SetNull)
+
+  level           Int                             // 1..5 (0 per ADMIN_ADJUST)
+  units           Int               @default(0)   // confezioni provvigionabili
+  rateCents       Int               @default(0)   // snapshot tariffa/unità: cambiare il
+                                                  // piano non riscrive lo storico
+  amountCents     Int                             // importo finale (dopo eventuale tetto)
+
+  status          CommissionStatus  @default(PENDING)
+  reason          CommissionReason  @default(ORDER)
+
+  maturesAt       DateTime?
+  approvedAt      DateTime?
+  paidAt          DateTime?
+
+  payoutRequestId String?
+  payoutRequest   PayoutRequest?    @relation(fields: [payoutRequestId], references: [id], onDelete: SetNull)
+
+  note            String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  // Idempotenza: in un unilevel esiste UN solo beneficiario per livello per ordine.
+  // orderId nullable + NULL distinti in Postgres ⇒ N righe ADMIN_ADJUST senza conflitto.
+  @@unique([orderId, level])
+  @@index([accountId, status])
+  @@index([status, maturesAt])
+  @@index([payoutRequestId])
+}
+
+model PayoutRequest {
+  id          String            @id @default(cuid())
+  accountId   String
+  account     CommissionAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  amountCents Int
+  status      PayoutStatus      @default(REQUESTED)
+
+  // Dati bancari tenuti qui (non su User) per poterli purgare su richiesta GDPR.
+  holderName  String
+  iban        String
+
+  adminNote   String?
+  commissions Commission[]
+  requestedAt DateTime          @default(now())
+  processedAt DateTime?
+
+  @@index([accountId, status])
+  @@index([status, requestedAt])
+}
+
+// ─────────────────────────────────────────────────────────────
+// COUPON (base, utile per marketing ongoing)
+// ─────────────────────────────────────────────────────────────
+
+enum DiscountType {
+  PERCENT
+  FIXED
+}
+
+model Coupon {
+  id           String       @id @default(cuid())
+  code         String       @unique
+  type         DiscountType
+  value        Int          // percent (0-100) o centesimi
+  active       Boolean      @default(true)
+  maxRedemptions Int?
+  timesUsed    Int          @default(0)
+  expiresAt    DateTime?
+  createdAt    DateTime     @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────
+// CONFIG GLOBALE (spedizione, piano provvigionale) — modificabile da admin
+// ─────────────────────────────────────────────────────────────
+
+model StoreConfig {
+  id                    String @id @default("default")
+  flatShippingCents     Int    @default(500)  // spedizione flat
+  freeShippingThreshold Int    @default(4900) // soglia spedizione gratuita in centesimi
+
+  // Piano provvigionale: importo FISSO in centesimi per confezione provvigionabile.
+  // Su un ordine da 50€ (1 unità): 10+2+2+2+3 = 19€ distribuiti (38%).
+  commissionL1Cents     Int @default(1000)
+  commissionL2Cents     Int @default(200)
+  commissionL3Cents     Int @default(200)
+  commissionL4Cents     Int @default(200)
+  commissionL5Cents     Int @default(300)
+
+  // Tetto di sicurezza: le provvigioni non superano mai questa % del netto ordine.
+  maxCommissionPercent  Int @default(40)
+
+  commissionMaturationDays Int @default(14) // dalla consegna (copre il diritto di recesso)
+  commissionFallbackDays   Int @default(45) // dal pagamento, se DELIVERED non arriva mai
+  minPayoutCents           Int @default(2000)
+
+  updatedAt             DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────────────────────
+// CONSULENTI — mini-sito /c/[slug] (opzionale: le provvigioni non lo richiedono)
+// ─────────────────────────────────────────────────────────────
+
+/// Atmosfere del mini-sito. Cambiano SOLO fondo e accento: tipografia,
+/// spaziature e animazioni restano identiche in tutte e tre.
+enum MiniSiteTheme {
+  NOTTE
+  CREMA
+  TOSTATURA
+}
+
+/// Frasi pre-scritte selezionabili dal consulente.
+/// Volutamente un enum e non testo libero: una bio libera su pagina pubblica
+/// aprirebbe a promesse di guadagno (L. 173/2005) impossibili da moderare.
+enum MiniSiteTagline {
+  NESSUNA
+  QUOTIDIANO
+  RISVEGLIO
+  CONDIVISO
+  SCELTA
+}
+
+model ConsultantProfile {
+  id          String          @id @default(cuid())
+  userId      String          @unique
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  slug        String          @unique          // mini-sito: /c/[slug] — IMMUTABILE dopo la creazione
+  displayName String
+  theme       MiniSiteTheme   @default(NOTTE)
+  tagline     MiniSiteTagline @default(NESSUNA)
+  avatarUrl   String?         // predisposto: nessun upload immagini nel progetto, si usano le iniziali
+  /// @deprecated Testo libero non ammesso su pagina pubblica. Non leggere né scrivere.
+  bio         String?
+  // Ogni utente ha la vetrina attiva dalla registrazione. Il flag resta come
+  // kill-switch per una pagina abusiva: resolveSponsorId ci si appoggia già.
+  active      Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+// ─────────────────────────────────────────────────────────────
+// PREDISPOSTE — FASE 3 (Rivenditori B2B)
+// ─────────────────────────────────────────────────────────────
+
+model ResellerProfile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName  String
+  vatNumber    String?
+  approved     Boolean  @default(false)
+  priceListId  String?
+  createdAt    DateTime @default(now())
+}

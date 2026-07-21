@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ☕ Caffè Network
 
-## Getting Started
+E-commerce di caffè con programma punti e fondamenta per il network marketing (MLM unilevel).
+Piattaforma custom **Next.js 16 + Prisma + PostgreSQL + Stripe**. Fase 1 (MVP e-commerce).
 
-First, run the development server:
+Documentazione completa per lo sviluppo: **[CLAUDE.md](./CLAUDE.md)**.
+
+## Avvio rapido
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# 1. Dipendenze
+npm install
+
+# 2. Ambiente — copia e compila le variabili
+cp .env.example .env
+#   - DATABASE_URL  → crea un DB gratuito su https://neon.tech
+#   - AUTH_SECRET   → npx auth secret
+#   - STRIPE_*      → chiavi TEST dal dashboard Stripe (opzionali: senza, il checkout va in modalità demo)
+
+# 3. Database: schema + dati di esempio
+npm run db:push
+npm run db:seed
+
+# 4. Sviluppo
+npm run dev        # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**Login di prova:**
+- Admin → `admin@caffenetwork.it` / `admin1234` (pannello su `/admin`)
+- Cliente → `cliente@example.com` / `cliente1234`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Cosa c'è già (Fase 1)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- 🛍️ Storefront: home, catalogo con filtri, pagina prodotto con varianti, carrello
+- 💳 Checkout con Stripe (test) + webhook, con fallback demo senza chiavi
+- ⭐ Programma punti: accumulo all'acquisto + riscatto come sconto (ledger completo)
+- 👤 Account cliente: ordini, movimenti punti, codice consulente (albero unilevel)
+- 🛠️ Admin: dashboard, gestione prodotti/varianti, ordini, utenti, impostazioni store
 
-## Learn More
+## Verifica
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run typecheck   # tipi OK
+npm run build       # build OK
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Test end-to-end del checkout: aggiungi al carrello → checkout → carta test Stripe
+`4242 4242 4242 4242` → l'ordine passa a `PAID`, i punti vengono accreditati.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Vedi **[CLAUDE.md](./CLAUDE.md)** per architettura, regole di dominio, roadmap e note legali.

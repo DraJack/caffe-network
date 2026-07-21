@@ -1,26 +1,254 @@
 @import "tailwindcss";
 
+/* ─────────────────────────────────────────────
+   Caffè Network — design tokens (brand provvisorio "coffee")
+   Palette calda: caffè scuro, crema, accento caramello.
+   ───────────────────────────────────────────── */
+@theme {
+  --color-coffee-50: #faf6f1;
+  --color-coffee-100: #f1e7db;
+  --color-coffee-200: #e2cdb5;
+  --color-coffee-300: #d0ad89;
+  --color-coffee-400: #bd8b60;
+  --color-coffee-500: #a86f43;
+  --color-coffee-600: #8f5836;
+  --color-coffee-700: #72442e;
+  --color-coffee-800: #4b2e1e;
+  --color-coffee-900: #2c1a12;
+  --color-coffee-950: #1a0f0a;
+
+  --color-cream: #faf6f1;
+  --color-accent: #c9922b;
+  --color-accent-dark: #a5761d;
+
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-heading: var(--font-fraunces), Georgia, "Times New Roman", serif;
+
+  /* Raggi — scala unica, così smettono di essere valori sparsi caso per caso */
+  --radius-xs: 0.375rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
+
+  /* Ombre calde: alpha di coffee-900 (44 26 18), mai nero puro.
+     È la differenza percepita tra "template" e "brand". */
+  --shadow-soft: 0 1px 2px rgb(44 26 18 / 0.04), 0 1px 3px rgb(44 26 18 / 0.06);
+  --shadow-card: 0 2px 4px rgb(44 26 18 / 0.04), 0 4px 12px rgb(44 26 18 / 0.06);
+  --shadow-lift: 0 4px 8px rgb(44 26 18 / 0.06), 0 12px 28px rgb(44 26 18 / 0.12);
+  --shadow-hero: 0 24px 64px rgb(26 15 10 / 0.45);
+  --shadow-accent: 0 4px 14px rgb(201 146 43 / 0.3);
+
+  /* Easing */
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-out-back: cubic-bezier(0.34, 1.4, 0.64, 1);
+
+  /* Animazioni — Tailwind v4 genera `animate-fade-up` da `--animate-fade-up` */
+  --animate-fade-in: fade-in 0.5s var(--ease-out-quart) both;
+  --animate-fade-up: fade-up 0.6s var(--ease-out-quart) both;
+  --animate-scale-in: scale-in 0.35s var(--ease-out-back) both;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-slide-in-right: slide-in-right 0.35s var(--ease-out-back) both;
+  --animate-pop: pop 0.3s var(--ease-out-back) both;
+  --animate-draw-line: draw-line 0.8s var(--ease-out-quart) both;
+  --animate-pulse-ring: pulse-ring 2.8s var(--ease-out-quart) infinite;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(1rem); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.94); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(1.5rem); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes pop {
+  0% { transform: scale(0.8); opacity: 0; }
+  60% { transform: scale(1.06); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Collegamenti della piramide: la linea si "disegna".
+   Funziona solo se l'elemento SVG ha pathLength="1", così dasharray/offset
+   sono in frazioni e non serve conoscere la lunghezza reale del segmento. */
+@keyframes draw-line {
+  from { stroke-dashoffset: 1; opacity: 0; }
+  to { stroke-dashoffset: 0; opacity: 1; }
+}
+
+/* Anello attorno al nodo radice ("TU"): si espande e svanisce. */
+@keyframes pulse-ring {
+  0% { transform: scale(1); opacity: 0.55; }
+  70% { transform: scale(1.9); opacity: 0; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #faf6f1;
+  --foreground: #2c1a12;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Utility di comodo */
+.container-page {
+  width: 100%;
+  max-width: 72rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container-page {
+    padding-inline: 1.5rem;
+  }
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+/* Scroll-reveal — lo stato iniziale vive qui, la classe .reveal-visible
+   viene aggiunta dall'IntersectionObserver in components/ui/reveal.tsx */
+.reveal {
+  opacity: 0;
+  transform: translateY(1.25rem);
+  transition:
+    opacity 0.7s var(--ease-out-quart),
+    transform 0.7s var(--ease-out-quart);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+.reveal-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Skeleton: gradiente che scorre, tinta calda */
+.skeleton {
+  background-image: linear-gradient(
+    90deg,
+    var(--color-coffee-100) 0%,
+    var(--color-coffee-50) 40%,
+    var(--color-coffee-100) 80%
+  );
+  background-size: 200% 100%;
+  animation: var(--animate-shimmer);
+}
+
+/* Grana sottile per le superfici scure (hero, footer) — data URI, nessuna richiesta di rete */
+.grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  /* Il default 0.16 è tarato sui fondi scuri; su fondo chiaro va abbassato,
+     altrimenti la grana legge come sporco invece che come texture. */
+  opacity: var(--grain-opacity, 0.16);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+
+/* Slider del simulatore di rete.
+   Track e thumb dei range input vivono in pseudo-elementi proprietari che
+   Tailwind non raggiunge in modo pulito: qui è l'unico posto sensato. */
+.range-accent {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 1.5rem; /* area di tocco comoda, il track resta sottile */
+  background: transparent;
+  cursor: pointer;
+}
+
+.range-accent::-webkit-slider-runnable-track {
+  height: 0.375rem;
+  border-radius: 9999px;
+  background: var(--color-coffee-100);
+}
+
+.range-accent::-moz-range-track {
+  height: 0.375rem;
+  border-radius: 9999px;
+  background: var(--color-coffee-100);
+}
+
+.range-accent::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 1.25rem;
+  width: 1.25rem;
+  margin-top: -0.4375rem; /* centra il thumb sul track di 6px */
+  border-radius: 9999px;
+  background: var(--color-accent);
+  border: 2px solid #fff;
+  box-shadow: var(--shadow-accent);
+  transition: transform 0.15s var(--ease-out-back);
+}
+
+.range-accent::-moz-range-thumb {
+  height: 1.25rem;
+  width: 1.25rem;
+  border-radius: 9999px;
+  background: var(--color-accent);
+  border: 2px solid #fff;
+  box-shadow: var(--shadow-accent);
+  transition: transform 0.15s var(--ease-out-back);
+}
+
+.range-accent:active::-webkit-slider-thumb {
+  transform: scale(1.15);
+}
+
+.range-accent:active::-moz-range-thumb {
+  transform: scale(1.15);
+}
+
+/* Focus ring coerente su tutta l'app (prima esisteva solo sul Button) */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+/* Accessibilità: rispetta "Riduci movimento".
+   ⚠️ I .reveal devono restare VISIBILI, non bloccati a opacity 0. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
 }
