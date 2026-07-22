@@ -94,14 +94,14 @@ export function MobileNav({ isLoggedIn }: { isLoggedIn: boolean }) {
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 md:hidden">
+        <div className="fixed inset-0 z-50 isolate md:hidden">
           <button
             className="absolute inset-0 animate-fade-in bg-coffee-950/50 backdrop-blur-sm"
             onClick={() => setOpen(false)}
             aria-label="Chiudi il menu"
             tabIndex={-1}
           />
-          <div className="absolute inset-y-0 right-0 flex w-[min(20rem,85vw)] animate-slide-in-right flex-col bg-cream shadow-(--shadow-hero)">
+          <div className="relative z-10 absolute inset-y-0 right-0 flex w-[min(20rem,85vw)] animate-slide-in-right flex-col bg-cream shadow-(--shadow-hero)">
             <div className="flex h-16 items-center justify-between border-b border-coffee-100 px-4">
               <span className="font-heading text-lg font-semibold text-coffee-900">Menu</span>
               <button
