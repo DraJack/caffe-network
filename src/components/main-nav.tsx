@@ -8,8 +8,6 @@ import { cn } from "@/lib/utils";
 
 export const NAV_LINKS: [string, string][] = [
   ["Catalogo", "/catalogo"],
-  ["Espresso", "/catalogo?categoria=espresso"],
-  ["Filtro", "/catalogo?categoria=filtro"],
   ["Diventa consulente", "/consulenti"],
 ];
 

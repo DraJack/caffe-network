@@ -16,7 +16,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ProductImage } from "@/components/ui/product-image";
 import { ProductCard } from "@/components/product-card";
-import { getFeaturedProducts, getCategories } from "@/server/catalog";
+import { getFeaturedProducts } from "@/server/catalog";
 import { getStoreConfig } from "@/lib/config";
 import { formatEuro } from "@/lib/utils";
 
@@ -25,11 +25,7 @@ export const dynamic = "force-dynamic";
 export default async function HomePage() {
   // Le cifre (provvigione L1, soglia spedizione) vengono da StoreConfig:
   // sono modificabili da admin e non vanno mai scritte a mano.
-  const [featured, categories, config] = await Promise.all([
-    getFeaturedProducts(),
-    getCategories(),
-    getStoreConfig(),
-  ]);
+  const [featured, config] = await Promise.all([getFeaturedProducts(), getStoreConfig()]);
 
   const showcase = featured[0];
 
@@ -231,25 +227,6 @@ export default async function HomePage() {
           </Reveal>
         </div>
       </section>
-
-      {/* ── Categorie ──────────────────────────────────────── */}
-      {categories.length > 0 && (
-        <section className="container-page pt-14">
-          <Reveal>
-            <div className="flex flex-wrap gap-2.5">
-              {categories.map((c) => (
-                <Link
-                  key={c.id}
-                  href={`/catalogo?categoria=${c.slug}`}
-                  className="rounded-full border border-coffee-200 bg-white px-4 py-2 text-sm font-medium text-coffee-700 transition-all duration-200 hover:-translate-y-0.5 hover:border-coffee-300 hover:bg-coffee-50 hover:text-coffee-900 hover:shadow-(--shadow-soft)"
-                >
-                  {c.name}
-                </Link>
-              ))}
-            </div>
-          </Reveal>
-        </section>
-      )}
 
       {/* ── In evidenza ────────────────────────────────────── */}
       <section className="container-page py-10">

@@ -33,20 +33,12 @@ export async function SiteFooter() {
           </p>
         </div>
 
-        <FooterCol
-          title="Negozio"
-          links={[
-            ["Catalogo", "/catalogo"],
-            ["Espresso", "/catalogo?categoria=espresso"],
-            ["Filtro", "/catalogo?categoria=filtro"],
-            ["Accessori", "/catalogo?categoria=accessori"],
-          ]}
-        />
+        <FooterCol title="Negozio" links={[["Catalogo", "/catalogo"]]} />
         <FooterCol title="Community" links={community} />
         <FooterCol
           title="Info"
           links={[
-            ["Chi siamo", "/chi-siamo"],
+            ["Come funziona", "/chi-siamo"],
             ["Spedizioni e resi", "/spedizioni"],
             ["Termini e privacy", "/legal"],
           ]}

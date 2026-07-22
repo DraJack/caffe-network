@@ -3,7 +3,7 @@ import { ArrowRight } from "lucide-react";
 import { PageShell, Prose } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
 
-export const metadata = { title: "Chi siamo" };
+export const metadata = { title: "Come funziona" };
 
 export default function ChiSiamoPage() {
   return (
