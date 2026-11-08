@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { Coffee } from "lucide-react";
 import { auth } from "@/lib/auth";
+import { BrandWordmark } from "@/components/brand-logo";
 
 export async function SiteFooter() {
   const session = await auth();
@@ -24,10 +24,8 @@ export async function SiteFooter() {
       <div className="grain absolute inset-0" aria-hidden />
       <div className="container-page relative grid gap-10 py-14 md:grid-cols-4">
         <div>
-          <div className="flex items-center gap-2 text-cream">
-            <Coffee className="h-5 w-5 text-accent" />
-            <span className="font-heading text-lg font-semibold">Caffè Network</span>
-          </div>
+          <BrandWordmark />
+          <span className="sr-only">AS Life</span>
           <p className="mt-3 max-w-xs text-sm leading-relaxed text-coffee-300">
             Caffè d&apos;eccellenza e una community che cresce insieme.
           </p>
@@ -47,7 +45,7 @@ export async function SiteFooter() {
 
       <div className="relative border-t border-coffee-800/80">
         <div className="container-page py-4 text-xs text-coffee-400">
-          © {new Date().getFullYear()} Caffè Network — MVP dimostrativo. Ambiente di test.
+          © {new Date().getFullYear()} AS Life — MVP dimostrativo. Ambiente di test.
         </div>
       </div>
     </footer>

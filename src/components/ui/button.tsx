@@ -4,14 +4,14 @@ import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-full font-medium transition-all duration-200 ease-[var(--ease-out-quart)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-cream disabled:opacity-50 disabled:pointer-events-none active:scale-[0.97] cursor-pointer",
+  "inline-flex items-center justify-center gap-2 rounded-md font-semibold tracking-wide transition-all duration-200 ease-[var(--ease-out-quart)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-cream disabled:opacity-50 disabled:pointer-events-none active:scale-[0.97] cursor-pointer",
   {
     variants: {
       variant: {
         primary:
           "bg-coffee-800 text-cream shadow-(--shadow-soft) hover:bg-coffee-900 hover:shadow-(--shadow-lift)",
         accent:
-          "bg-accent text-coffee-900 shadow-(--shadow-soft) hover:bg-accent-dark hover:shadow-(--shadow-accent)",
+          "bg-gold text-coffee-950 shadow-(--shadow-soft) hover:brightness-110 hover:shadow-(--shadow-accent)",
         outline:
           "border border-coffee-300 text-coffee-800 hover:border-coffee-400 hover:bg-coffee-100",
         ghost: "text-coffee-800 hover:bg-coffee-100",

@@ -9,7 +9,7 @@ export default function ChiSiamoPage() {
   return (
     <PageShell
       title="Il caffè, e le persone che lo portano in giro"
-      intro="Caffè Network nasce da un'idea semplice: un buon caffè si racconta meglio di persona che con la pubblicità."
+      intro="AS Life nasce da un'idea semplice: un buon caffè si racconta meglio di persona che con la pubblicità."
     >
       <Prose title="Cosa facciamo">
         <p>

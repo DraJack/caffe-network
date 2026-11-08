@@ -151,14 +151,14 @@ async function main() {
 
   // Prodotti placeholder — immagini via placehold.co (sostituibili)
   const img = (t: string) =>
-    `https://placehold.co/800x800/4b2e1e/ffffff/png?text=${encodeURIComponent(t)}`;
+    `https://placehold.co/800x800/14120f/d8b988/png?text=${encodeURIComponent(t)}`;
 
   // È sempre la stessa miscela: descrizione condivisa + riga di compatibilità per formato.
-  const ORIGIN = "Miscela Caffè Network · 80% Arabica / 20% Robusta";
+  const ORIGIN = "Miscela AS Life · 80% Arabica / 20% Robusta";
   const desc = (formatLine: string) =>
     `Il nostro caffè: miscela 80% Arabica / 20% Robusta, tostatura media, corpo rotondo e ` +
     `crema densa con note di cacao e frutta secca. ${formatLine} Confezione da 150 pezzi. ` +
-    `Marchi citati di proprietà dei rispettivi titolari, non affiliati a Caffè Network.`;
+    `Marchi citati di proprietà dei rispettivi titolari, non affiliati a AS Life.`;
 
   const prodotti: Array<{
     slug: string;

@@ -3,7 +3,7 @@ import { getMiniSiteBySlug } from "@/server/consultant-profile";
 import { SLUG_PATTERN } from "@/lib/slug";
 import { initials, themeTokens } from "@/lib/mini-site";
 
-export const alt = "Invito a Caffè Network";
+export const alt = "Invito a AS Life";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -21,7 +21,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
   const { slug } = await params;
   const profile = SLUG_PATTERN.test(slug) ? await getMiniSiteBySlug(slug) : null;
 
-  const displayName = profile?.displayName ?? "Caffè Network";
+  const displayName = profile?.displayName ?? "AS Life";
   const t = themeTokens(profile?.theme ?? "NOTTE");
 
   return new ImageResponse(
@@ -73,7 +73,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
         </div>
 
         <div style={{ marginTop: 26, fontSize: 36, color: t.muted }}>
-          Anche tu per il caffè · Caffè Network
+          Anche tu per il caffè · AS Life
         </div>
       </div>
     ),

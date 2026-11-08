@@ -125,7 +125,7 @@ export function CheckoutForm(props: Props) {
               Hai un account?{" "}
               <Link
                 href="/login"
-                className="font-medium text-accent-dark transition-colors hover:text-accent"
+                className="font-medium text-accent-dark transition-colors hover:text-coffee-900"
               >
                 Accedi
               </Link>{" "}

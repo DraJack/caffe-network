@@ -69,7 +69,7 @@ export function MiniSiteShare({
         <Link
           href={`/c/${slug}`}
           target="_blank"
-          className="inline-flex items-center gap-1.5 font-medium text-accent-dark transition-colors hover:text-accent"
+          className="inline-flex items-center gap-1.5 font-medium text-accent-dark transition-colors hover:text-coffee-900"
         >
           Apri la pagina
           <ExternalLink className="h-3.5 w-3.5" />

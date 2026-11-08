@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/ui/reveal";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ProductImage } from "@/components/ui/product-image";
+import { BeanDivider, BrandLogo } from "@/components/brand-logo";
 import { ProductCard } from "@/components/product-card";
 import { getFeaturedProducts } from "@/server/catalog";
 import { getStoreConfig } from "@/lib/config";
@@ -27,8 +27,6 @@ export default async function HomePage() {
   // sono modificabili da admin e non vanno mai scritte a mano.
   const [featured, config] = await Promise.all([getFeaturedProducts(), getStoreConfig()]);
 
-  const showcase = featured[0];
-
   return (
     <>
       {/* ── Hero ───────────────────────────────────────────── */}
@@ -36,24 +34,29 @@ export default async function HomePage() {
         {/* Alone caldo dietro al titolo + grana: profondità senza immagini pesanti */}
         <div
           aria-hidden
-          className="absolute inset-0 -z-10 bg-[radial-gradient(70%_60%_at_15%_0%,rgba(201,146,43,0.22),transparent_60%),radial-gradient(50%_50%_at_100%_100%,rgba(143,88,54,0.35),transparent_65%)]"
+          className="absolute inset-0 -z-10 bg-[radial-gradient(45%_70%_at_78%_45%,rgba(216,185,136,0.16),transparent_70%)]"
         />
         <div className="grain absolute inset-0 -z-10" aria-hidden />
 
-        <div className="container-page grid gap-12 py-20 md:grid-cols-2 md:items-center md:py-28">
+        <div className="container-page grid gap-10 py-14 md:grid-cols-2 md:items-center md:gap-12 md:py-24">
+          {/* Il logo è il protagonista: su mobile viene prima del titolo */}
+          <div className="order-first flex animate-scale-in justify-center md:order-last">
+            <BrandLogo preload className="max-w-64 md:max-w-[26rem]" />
+          </div>
+
           <div>
-            <p className="mb-5 inline-flex animate-fade-up items-center gap-2 rounded-full border border-coffee-700/60 bg-coffee-900/60 px-4 py-1.5 text-sm text-accent backdrop-blur">
+            <p className="mb-5 inline-flex animate-fade-up items-center gap-2 rounded-full border border-accent/30 bg-coffee-900/60 px-4 py-1.5 text-sm text-accent backdrop-blur">
               <Flame className="h-4 w-4" /> Tostato fresco, ogni settimana
             </p>
             <h1
               className="animate-fade-up text-balance font-heading text-5xl font-bold leading-[1.05] tracking-tight md:text-6xl"
               style={{ animationDelay: "80ms" }}
             >
-              Il caffè che unisce <span className="text-accent">gusto</span> e{" "}
-              <span className="text-accent">community</span>
+              Il caffè che unisce <span className="text-gold">gusto</span> e{" "}
+              <span className="text-gold">community</span>
             </h1>
             <p
-              className="mt-6 max-w-md animate-fade-up text-lg leading-relaxed text-coffee-200"
+              className="mt-6 max-w-md animate-fade-up text-lg leading-relaxed text-coffee-300"
               style={{ animationDelay: "160ms" }}
             >
               Miscele e single origin selezionati. Acquista online e, se vuoi, invita chi vuoi:
@@ -73,55 +76,16 @@ export default async function HomePage() {
                 asChild
                 variant="outline"
                 size="lg"
-                className="border-coffee-600 text-cream hover:border-coffee-500 hover:bg-coffee-800"
+                className="border-accent/50 text-accent hover:border-accent hover:bg-accent/10"
               >
                 <Link href="/consulenti">Come si guadagna</Link>
               </Button>
             </div>
           </div>
-
-          {/* Vetrina: un prodotto vero, non un segnaposto */}
-          <div className="hidden md:block">
-            {showcase ? (
-              <Link
-                href={`/prodotto/${showcase.slug}`}
-                className="group relative block animate-scale-in"
-                style={{ animationDelay: "200ms" }}
-              >
-                <div className="overflow-hidden rounded-3xl bg-coffee-900 p-3 shadow-(--shadow-hero) ring-1 ring-coffee-700/50">
-                  <div className="aspect-square overflow-hidden rounded-2xl bg-coffee-800">
-                    <ProductImage
-                      src={showcase.image}
-                      alt={showcase.name}
-                      className="transition-transform duration-700 ease-out-quart group-hover:scale-105"
-                    />
-                  </div>
-                  <div className="flex items-end justify-between gap-4 px-3 py-4">
-                    <div>
-                      <p className="text-xs uppercase tracking-wider text-accent">In evidenza</p>
-                      <p className="mt-1 font-heading text-xl font-semibold text-cream">
-                        {showcase.name}
-                      </p>
-                      {showcase.origin && (
-                        <p className="text-sm text-coffee-300">{showcase.origin}</p>
-                      )}
-                    </div>
-                    <p className="shrink-0 font-heading text-2xl font-semibold text-cream">
-                      {formatEuro(showcase.fromCents)}
-                    </p>
-                  </div>
-                </div>
-              </Link>
-            ) : (
-              <div className="flex aspect-square animate-scale-in items-center justify-center rounded-3xl bg-gradient-to-br from-coffee-800 to-coffee-900 shadow-(--shadow-hero) ring-1 ring-coffee-700/50">
-                <Coffee className="h-40 w-40 text-accent/40" strokeWidth={0.75} />
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Fascia trust attaccata al fondo dell'hero */}
-        <div className="relative border-t border-coffee-800/70">
+        <div className="relative border-t border-accent/20">
           <div className="container-page grid gap-4 py-5 text-sm text-coffee-300 sm:grid-cols-3">
             <TrustItem
               icon={<Truck className="h-4 w-4" />}
@@ -134,48 +98,51 @@ export default async function HomePage() {
       </section>
 
       {/* ── Vantaggi ───────────────────────────────────────── */}
-      <section className="container-page grid gap-5 py-16 sm:grid-cols-3">
-        {[
-          {
-            icon: <Coins className="h-5 w-5" />,
-            title: "Guadagna invitando",
-            body: `${formatEuro(config.commissionL1Cents)} su ogni confezione comprata da chi inviti, più una quota fino al quinto livello.`,
-          },
-          {
-            icon: <Users className="h-5 w-5" />,
-            title: "La tua rete",
-            body: "Segui la crescita della tua rete e i tuoi guadagni dalla dashboard.",
-          },
-          {
-            icon: <Truck className="h-5 w-5" />,
-            title: "Spedizione rapida",
-            body: `Consegna in tutta Italia, gratuita sopra ${formatEuro(config.freeShippingThreshold)} di spesa.`,
-          },
-        ].map((f, i) => (
-          <Reveal key={f.title} delay={i * 90}>
-            <div className="group h-full rounded-2xl border border-coffee-100 bg-white p-7 shadow-(--shadow-card) transition-all duration-300 ease-out-quart hover:-translate-y-1 hover:shadow-(--shadow-lift)">
-              <div className="mb-4 inline-flex rounded-2xl bg-accent/12 p-3.5 text-accent-dark transition-transform duration-300 group-hover:scale-110">
-                {f.icon}
+      <section className="bg-coffee-950">
+        <div className="container-page grid gap-5 py-16 sm:grid-cols-3">
+          {[
+            {
+              icon: <Coins className="h-5 w-5" />,
+              title: "Guadagna invitando",
+              body: `${formatEuro(config.commissionL1Cents)} su ogni confezione comprata da chi inviti, più una quota fino al quinto livello.`,
+            },
+            {
+              icon: <Users className="h-5 w-5" />,
+              title: "La tua rete",
+              body: "Segui la crescita della tua rete e i tuoi guadagni dalla dashboard.",
+            },
+            {
+              icon: <Truck className="h-5 w-5" />,
+              title: "Spedizione rapida",
+              body: `Consegna in tutta Italia, gratuita sopra ${formatEuro(config.freeShippingThreshold)} di spesa.`,
+            },
+          ].map((f, i) => (
+            <Reveal key={f.title} delay={i * 90}>
+              <div className="group h-full rounded-2xl border border-accent/20 bg-coffee-900 p-7 transition-all duration-300 ease-out-quart hover:-translate-y-1 hover:border-accent/50">
+                <div className="mb-4 inline-flex rounded-2xl bg-accent/12 p-3.5 text-accent transition-transform duration-300 group-hover:scale-110">
+                  {f.icon}
+                </div>
+                <h3 className="font-heading text-lg font-semibold text-cream">{f.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-coffee-300">{f.body}</p>
               </div>
-              <h3 className="font-heading text-lg font-semibold text-coffee-900">{f.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-coffee-600">{f.body}</p>
-            </div>
-          </Reveal>
-        ))}
+            </Reveal>
+          ))}
+        </div>
       </section>
 
       {/* ── Come funziona ──────────────────────────────────── */}
-      <section className="border-y border-coffee-100 bg-white/60">
+      <section className="border-y border-accent/20 bg-coffee-900">
         <div className="container-page py-16">
           <Reveal>
             <div className="mx-auto max-w-2xl text-center">
-              <p className="text-sm font-medium uppercase tracking-wider text-accent-dark">
+              <p className="text-sm font-medium uppercase tracking-[0.2em] text-accent">
                 Come funziona
               </p>
-              <h2 className="mt-3 text-balance font-heading text-3xl font-bold text-coffee-900 md:text-4xl">
+              <h2 className="mt-3 text-balance font-heading text-3xl font-bold text-cream md:text-4xl">
                 Tre passi, nessun costo d&apos;ingresso
               </h2>
-              <p className="mt-4 leading-relaxed text-coffee-600">
+              <BeanDivider className="mt-5" />
+              <p className="mt-5 leading-relaxed text-coffee-300">
                 Non serve diventare consulente né pagare una quota: basta un account gratuito e il
                 tuo link personale.
               </p>
@@ -201,15 +168,15 @@ export default async function HomePage() {
               },
             ].map((s, i) => (
               <Reveal key={s.title} delay={i * 110}>
-                <div className="relative h-full rounded-2xl border border-coffee-100 bg-white p-7 shadow-(--shadow-soft)">
-                  <span className="absolute right-6 top-5 font-heading text-5xl font-bold text-coffee-100">
+                <div className="relative h-full rounded-2xl border border-accent/20 bg-coffee-950 p-7">
+                  <span className="absolute right-6 top-5 font-heading text-5xl font-bold text-coffee-800">
                     {i + 1}
                   </span>
-                  <div className="mb-4 inline-flex rounded-2xl bg-coffee-800 p-3.5 text-accent">
+                  <div className="mb-4 inline-flex rounded-2xl bg-accent/12 p-3.5 text-accent">
                     {s.icon}
                   </div>
-                  <h3 className="font-heading text-lg font-semibold text-coffee-900">{s.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-coffee-600">{s.body}</p>
+                  <h3 className="font-heading text-lg font-semibold text-cream">{s.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-coffee-300">{s.body}</p>
                 </div>
               </Reveal>
             ))}
@@ -217,7 +184,7 @@ export default async function HomePage() {
 
           <Reveal delay={200}>
             <div className="mt-10 text-center">
-              <Button asChild variant="primary">
+              <Button asChild variant="accent">
                 <Link href="/consulenti">
                   Vedi il piano completo
                   <ArrowRight className="h-4 w-4" />
@@ -235,7 +202,7 @@ export default async function HomePage() {
             <h2 className="font-heading text-3xl font-bold text-coffee-900">In evidenza</h2>
             <Link
               href="/catalogo"
-              className="group inline-flex shrink-0 items-center gap-1 text-sm font-medium text-accent-dark transition-colors hover:text-accent"
+              className="group inline-flex shrink-0 items-center gap-1 text-sm font-medium text-accent-dark transition-colors hover:text-coffee-900"
             >
               Vedi tutto
               <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />

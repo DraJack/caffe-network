@@ -15,7 +15,7 @@ export default function LegalPage() {
     >
       <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm leading-relaxed text-amber-900">
         <strong className="block">Documento provvisorio.</strong>
-        Caffè Network è al momento un ambiente dimostrativo: i pagamenti girano in modalità di test
+        AS Life è al momento un ambiente dimostrativo: i pagamenti girano in modalità di test
         e non vengono evasi ordini reali. Le condizioni generali di vendita e l&apos;informativa
         privacy definitive verranno pubblicate, verificate da un professionista, prima
         dell&apos;apertura delle vendite. Quanto segue descrive come funziona oggi la piattaforma.

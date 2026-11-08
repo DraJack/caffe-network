@@ -78,7 +78,7 @@ export default async function AccountPage() {
                 </p>
                 <Link
                   href={s.href}
-                  className="mt-auto inline-flex items-center gap-1 pt-4 text-sm font-medium text-accent-dark transition-colors hover:text-accent"
+                  className="mt-auto inline-flex items-center gap-1 pt-4 text-sm font-medium text-accent-dark transition-colors hover:text-coffee-900"
                 >
                   {s.cta}
                   <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
@@ -104,7 +104,7 @@ export default async function AccountPage() {
         {user.orders.length > 0 && (
           <Link
             href="/account/ordini"
-            className="text-sm font-medium text-accent-dark transition-colors hover:text-accent"
+            className="text-sm font-medium text-accent-dark transition-colors hover:text-coffee-900"
           >
             Vedi tutti
           </Link>

@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const profile = await loadProfile(slug);
   if (!profile) return { title: "Vetrina non trovata" };
 
-  const title = `${profile.displayName} ti invita in Caffè Network`;
+  const title = `${profile.displayName} ti invita in AS Life`;
   const description =
     taglineText(profile.tagline) ??
     "Caffè selezionato, tostato con cura. Registrati gratis, senza quote d'ingresso.";

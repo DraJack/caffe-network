@@ -20,7 +20,7 @@ export const metadata = {
   title: "Piano provvigionale",
   description,
   openGraph: {
-    title: "Piano provvigionale — Caffè Network",
+    title: "Piano provvigionale — AS Life",
     description,
     type: "website",
   },
@@ -45,7 +45,7 @@ export default async function ConsulentiPage() {
       <section className="relative isolate overflow-hidden bg-coffee-950 text-cream">
         <div
           aria-hidden
-          className="absolute inset-0 -z-10 bg-[radial-gradient(60%_60%_at_20%_0%,rgba(201,146,43,0.2),transparent_60%)]"
+          className="absolute inset-0 -z-10 bg-[radial-gradient(60%_60%_at_20%_0%,rgba(216,185,136,0.2),transparent_60%)]"
         />
         <div className="grain absolute inset-0 -z-10" aria-hidden />
         <div className="container-page py-20">

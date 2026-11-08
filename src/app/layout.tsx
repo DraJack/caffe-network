@@ -1,20 +1,20 @@
 import type { Metadata } from "next";
-import { Geist, Fraunces } from "next/font/google";
+import { Montserrat, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { ToastProvider } from "@/components/ui/toast";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+/** Sans geometrica, la stessa voce di "LIFE" e del payoff nel logo. */
+const montserrat = Montserrat({
+  variable: "--font-montserrat",
   subsets: ["latin"],
 });
 
-/** Serif display per i titoli: dà voce al brand, il corpo resta Geist per leggibilità. */
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
+/** Serif ad alto contrasto per i titoli: richiama il tratto del monogramma AS. */
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
   subsets: ["latin"],
-  axes: ["SOFT", "WONK", "opsz"],
 });
 
 export const metadata: Metadata = {
@@ -22,8 +22,8 @@ export const metadata: Metadata = {
   // restano relative, e WhatsApp/Twitter mostrano il link senza anteprima.
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   title: {
-    default: "Caffè Network — Caffè d'eccellenza",
-    template: "%s · Caffè Network",
+    default: "AS Life — Caffè d'eccellenza",
+    template: "%s · AS Life",
   },
   description:
     "Caffè selezionato, tostato con cura. Acquista online, invita chi vuoi e guadagna una provvigione su ogni loro ordine.",
@@ -33,7 +33,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="it" className={`${geistSans.variable} ${fraunces.variable} h-full`}>
+    <html lang="it" className={`${montserrat.variable} ${playfair.variable} h-full`}>
       <head>
         {/* Senza JS l'IntersectionObserver non gira: i .reveal resterebbero invisibili. */}
         <noscript>

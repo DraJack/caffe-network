@@ -223,6 +223,9 @@ alle 03:00 in `vercel.json`.
 - Le pagine che leggono dati/sessione sono **dinamiche** (`export const dynamic = "force-dynamic"` o uso di `auth()`).
 - Immagini prodotto: attualmente placeholder (`placehold.co`); si usano `<img>` semplici (nessuna config `next/image` per host remoti).
 - UI: componenti e testi in italiano, palette `coffee-*` / `accent` / `cream`.
+- **Brand: AS Life** (nero e oro, logo in `public/brand/`, componenti in `src/components/brand-logo.tsx`).
+  Repo, progetto Vercel e cookie `cn_ref` conservano il vecchio nome "caffe-network"/"cn_". I PNG del
+  logo contengono l'alone dorato: usarli solo su superfici nere.
 
 ---
 

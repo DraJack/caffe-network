@@ -43,7 +43,7 @@ export function MainNav() {
             aria-current={active ? "page" : undefined}
             className={cn(
               "relative rounded-full px-3 py-2 transition-colors duration-200",
-              active ? "text-coffee-900" : "text-coffee-600 hover:text-coffee-900",
+              active ? "text-accent" : "text-coffee-200 hover:text-cream",
             )}
           >
             {label}
@@ -88,7 +88,7 @@ export function MobileNav({ isLoggedIn }: { isLoggedIn: boolean }) {
         onClick={() => setOpen(true)}
         aria-label="Apri il menu"
         aria-expanded={open}
-        className="rounded-full p-2 text-coffee-700 transition-colors hover:bg-coffee-100 md:hidden"
+        className="rounded-full p-2 text-coffee-200 transition-colors hover:bg-coffee-800 md:hidden"
       >
         <Menu className="h-5 w-5" />
       </button>
@@ -101,13 +101,13 @@ export function MobileNav({ isLoggedIn }: { isLoggedIn: boolean }) {
             aria-label="Chiudi il menu"
             tabIndex={-1}
           />
-          <div className="relative z-10 absolute inset-y-0 right-0 flex w-[min(20rem,85vw)] animate-slide-in-right flex-col bg-cream shadow-(--shadow-hero)">
-            <div className="flex h-16 items-center justify-between border-b border-coffee-100 px-4">
-              <span className="font-heading text-lg font-semibold text-coffee-900">Menu</span>
+          <div className="absolute inset-y-0 right-0 z-10 flex w-[min(20rem,85vw)] animate-slide-in-right flex-col bg-coffee-950 shadow-(--shadow-hero)">
+            <div className="flex h-16 items-center justify-between border-b border-accent/20 px-4">
+              <span className="font-heading text-lg font-semibold text-cream">Menu</span>
               <button
                 onClick={() => setOpen(false)}
                 aria-label="Chiudi il menu"
-                className="rounded-full p-2 text-coffee-700 transition-colors hover:bg-coffee-100"
+                className="rounded-full p-2 text-coffee-200 transition-colors hover:bg-coffee-800"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -125,8 +125,8 @@ export function MobileNav({ isLoggedIn }: { isLoggedIn: boolean }) {
                     className={cn(
                       "rounded-xl px-4 py-3 text-base font-medium transition-colors",
                       active
-                        ? "bg-coffee-800 text-cream"
-                        : "text-coffee-800 hover:bg-coffee-100",
+                        ? "bg-accent/15 text-accent"
+                        : "text-coffee-100 hover:bg-coffee-800",
                     )}
                   >
                     {label}
@@ -134,19 +134,19 @@ export function MobileNav({ isLoggedIn }: { isLoggedIn: boolean }) {
                 );
               })}
 
-              <div className="my-3 border-t border-coffee-100" />
+              <div className="my-3 border-t border-coffee-800" />
 
               <Link
                 href={isLoggedIn ? "/account" : "/login"}
                 onClick={close}
-                className="rounded-xl px-4 py-3 text-base font-medium text-coffee-800 transition-colors hover:bg-coffee-100"
+                className="rounded-xl px-4 py-3 text-base font-medium text-coffee-100 transition-colors hover:bg-coffee-800"
               >
                 {isLoggedIn ? "Il tuo account" : "Accedi"}
               </Link>
               <Link
                 href="/carrello"
                 onClick={close}
-                className="rounded-xl px-4 py-3 text-base font-medium text-coffee-800 transition-colors hover:bg-coffee-100"
+                className="rounded-xl px-4 py-3 text-base font-medium text-coffee-100 transition-colors hover:bg-coffee-800"
               >
                 Carrello
               </Link>

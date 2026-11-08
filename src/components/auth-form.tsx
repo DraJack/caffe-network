@@ -2,7 +2,8 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
-import { Coffee, AlertCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
+import { BrandMonogram } from "@/components/brand-logo";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { registerUser, loginUser, type ActionState } from "@/app/actions/auth";
@@ -23,8 +24,8 @@ export function AuthForm({
     <div className="container-page flex justify-center py-16">
       <div className="w-full max-w-md animate-fade-up">
         <div className="mb-6 flex justify-center">
-          <span className="inline-flex rounded-2xl bg-coffee-800 p-3.5 text-accent">
-            <Coffee className="h-6 w-6" />
+          <span className="inline-flex rounded-2xl bg-coffee-950 px-4 py-3">
+            <BrandMonogram />
           </span>
         </div>
 
@@ -127,7 +128,7 @@ export function AuthForm({
               Non hai un account?{" "}
               <Link
                 href="/registrati"
-                className="font-medium text-accent-dark transition-colors hover:text-accent"
+                className="font-medium text-accent-dark transition-colors hover:text-coffee-900"
               >
                 Registrati
               </Link>
@@ -137,7 +138,7 @@ export function AuthForm({
               Hai già un account?{" "}
               <Link
                 href="/login"
-                className="font-medium text-accent-dark transition-colors hover:text-accent"
+                className="font-medium text-accent-dark transition-colors hover:text-coffee-900"
               >
                 Accedi
               </Link>

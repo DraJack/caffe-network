@@ -53,7 +53,7 @@ export function MiniSiteTeaser() {
             <span className="ml-2 flex min-w-0 items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs text-coffee-500 ring-1 ring-coffee-100">
               <Link2 className="h-3 w-3 shrink-0" aria-hidden />
               <span className="truncate">
-                caffenetwork.it/c/<span className="text-coffee-900">iltuonome</span>
+                aslife.it/c/<span className="text-coffee-900">iltuonome</span>
               </span>
             </span>
           </div>
