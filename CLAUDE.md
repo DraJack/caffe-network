@@ -136,8 +136,8 @@ src/components/             Componenti UI e di dominio (ui/ = primitive)
 **Provvigioni (Fase 2) — il cuore del sistema.**
 
 Piano **unilevel a 5 livelli**, importo **fisso per confezione acquistata** (non percentuale):
-L1 10€ · L2 2€ · L3 2€ · L4 3€ · L5 3€ ⇒ 20€ su una confezione da 70€ (29%). Scala col volume:
-3 confezioni ⇒ 30/6/6/9/9€. Le tariffe stanno in `StoreConfig` e sono modificabili da admin.
+L1 10€ · L2 2€ · L3 2€ · L4 2€ · L5 4€ ⇒ 20€ su una confezione da 70€ (29%). Scala col volume:
+3 confezioni ⇒ 30/6/6/6/12€. Le tariffe stanno in `StoreConfig` e sono modificabili da admin.
 
 - **Chi guadagna:** *tutti* gli utenti registrati con una downline. Nessun gate di ruolo, nessuna
   quota d'iscrizione. `ConsultantProfile` (il mini-sito) nasce automaticamente con l'account.

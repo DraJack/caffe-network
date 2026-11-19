@@ -5,12 +5,12 @@ export const DEFAULT_STORE_CONFIG = {
   id: "default",
   flatShippingCents: 500,
   freeShippingThreshold: 4900,
-  // Piano provvigionale: 10€ / 2€ / 2€ / 3€ / 3€ per confezione ⇒ 20€ su 70€ (29%).
+  // Piano provvigionale: 10€ / 2€ / 2€ / 2€ / 4€ per confezione ⇒ 20€ su 70€ (29%).
   commissionL1Cents: 1000,
   commissionL2Cents: 200,
   commissionL3Cents: 200,
-  commissionL4Cents: 300,
-  commissionL5Cents: 300,
+  commissionL4Cents: 200,
+  commissionL5Cents: 400,
   maxCommissionPercent: 40,
   commissionMaturationDays: 14,
   commissionFallbackDays: 45,

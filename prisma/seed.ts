@@ -339,7 +339,7 @@ async function main() {
     { id: "seed-order-1", quantity: 1, deliveredDaysAgo: 20 },
     // Consegnato ieri ⇒ ancora PENDING (finestra resi aperta).
     { id: "seed-order-2", quantity: 1, deliveredDaysAgo: 1 },
-    // 3 confezioni ⇒ 30/6/6/9/9€: verifica che il piano scali col volume.
+    // 3 confezioni ⇒ 30/6/6/6/12€: verifica che il piano scali col volume.
     { id: "seed-order-3", quantity: 3, deliveredDaysAgo: 25 },
   ];
 
