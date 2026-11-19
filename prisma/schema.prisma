@@ -100,6 +100,9 @@ model Product {
   origin      String?
   roastLevel  RoastLevel?
   images      String[]           // URL immagini (placeholder in MVP)
+  // Scheda sensoriale come lista ordinata [{ label, value }] (es. Retrogusto: Rotondo).
+  // Json e non colonne dedicate: le voci cambiano da miscela a miscela.
+  specs       Json?
   active      Boolean  @default(true)
   featured    Boolean  @default(false)
 
@@ -122,6 +125,8 @@ model ProductVariant {
   name       String            // es. "Grani 250g", "Macinato 1kg"
   priceCents Int
   stock      Int     @default(0)
+  // Immagine specifica del formato (es. cialda 44 vs 38 mm). Null ⇒ si usa Product.images[0].
+  image      String?
   // Unità provvigionabili per pezzo: 0 = accessorio escluso, 2 = bundle doppio.
   commissionUnits Int @default(1)
 

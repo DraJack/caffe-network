@@ -5,7 +5,7 @@ export default function ProdottoLoading() {
     <div className="container-page py-10">
       <Skeleton className="h-5 w-32" />
       <div className="mt-6 grid gap-10 md:grid-cols-2">
-        <Skeleton className="aspect-square rounded-2xl" />
+        <Skeleton className="aspect-[3/2] rounded-2xl" />
         <div className="flex flex-col gap-4">
           <Skeleton className="h-5 w-24" />
           <Skeleton className="h-10 w-3/4" />

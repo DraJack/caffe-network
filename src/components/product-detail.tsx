@@ -11,7 +11,14 @@ import { useToast } from "@/components/ui/toast";
 import { formatEuro, cn } from "@/lib/utils";
 import { addToCart } from "@/app/actions/cart";
 
-type Variant = { id: string; name: string; priceCents: number; stock: number };
+type Variant = {
+  id: string;
+  name: string;
+  priceCents: number;
+  stock: number;
+  /** Foto del formato; se assente si usa quella del prodotto. */
+  image?: string | null;
+};
 
 type Props = {
   name: string;
@@ -19,14 +26,15 @@ type Props = {
   origin?: string | null;
   roast?: string | null;
   image: string | null;
+  specs?: { label: string; value: string }[];
   categoryName?: string | null;
   variants: Variant[];
 };
 
-const ROAST_LABEL: Record<string, string> = {
-  LIGHT: "Tostatura chiara",
-  MEDIUM: "Tostatura media",
-  DARK: "Tostatura scura",
+const ROAST_VALUE: Record<string, string> = {
+  LIGHT: "Chiara",
+  MEDIUM: "Media",
+  DARK: "Scura",
 };
 
 /** Soglia sotto la quale segnalare la scorsa bassa: crea urgenza onesta. */
@@ -38,6 +46,7 @@ export function ProductDetail({
   origin,
   roast,
   image,
+  specs = [],
   categoryName,
   variants,
 }: Props) {
@@ -49,6 +58,17 @@ export function ProductDetail({
   const toast = useToast();
 
   const outOfStock = selected.stock <= 0;
+  const shownImage = selected.image ?? image;
+
+  // Il primo paragrafo è la frase che racconta la miscela: va in evidenza,
+  // il resto (formato, compatibilità, note legali) resta testo corrente.
+  const [lead, ...body] = description.split(/\n\s*\n/);
+
+  // Tostatura e scheda sensoriale in un'unica lista, come sulla confezione.
+  const profile = [
+    ...(roast ? [{ label: "Tostatura", value: ROAST_VALUE[roast] ?? roast }] : []),
+    ...specs,
+  ];
   const lowStock = !outOfStock && selected.stock <= LOW_STOCK;
 
   const handleAdd = () => {
@@ -79,9 +99,11 @@ export function ProductDetail({
 
       <div className="grid gap-10 md:grid-cols-2">
         <div className="group overflow-hidden rounded-3xl bg-coffee-100 shadow-(--shadow-card)">
-          <div className="aspect-square">
+          <div className="aspect-[3/2]">
             <ProductImage
-              src={image}
+              // key: al cambio formato l'<img> si rimonta, azzerando lo stato di errore
+              key={shownImage ?? "none"}
+              src={shownImage}
               alt={name}
               className="transition-transform duration-700 ease-out-quart group-hover:scale-105"
             />
@@ -98,13 +120,29 @@ export function ProductDetail({
             {name}
           </h1>
 
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-coffee-600">
-            {origin && <span>{origin}</span>}
-            {origin && roast && <span className="text-coffee-300">·</span>}
-            {roast && <span>{ROAST_LABEL[roast] ?? roast}</span>}
-          </div>
+          {origin && <p className="mt-3 text-sm text-coffee-600">{origin}</p>}
 
-          <p className="mt-5 leading-relaxed text-coffee-700">{description}</p>
+          <p className="mt-5 text-balance font-heading text-xl font-semibold leading-snug text-accent-dark">
+            {lead}
+          </p>
+          {body.map((para, i) => (
+            <p key={i} className="mt-3 leading-relaxed text-coffee-700">
+              {para}
+            </p>
+          ))}
+
+          {profile.length > 0 && (
+            <dl className="mt-6 divide-y divide-coffee-100 rounded-2xl border border-coffee-100 bg-white px-4 text-sm">
+              {profile.map((row) => (
+                <div key={row.label} className="flex justify-between gap-4 py-2.5">
+                  <dt className="font-semibold uppercase tracking-wide text-coffee-500">
+                    {row.label}
+                  </dt>
+                  <dd className="text-right text-coffee-800">{row.value}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
 
           <div className="mt-7 font-heading text-4xl font-bold text-coffee-900">
             {formatEuro(selected.priceCents)}

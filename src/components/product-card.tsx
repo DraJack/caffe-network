@@ -18,7 +18,7 @@ export function ProductCard({ slug, name, image, origin, fromCents, categoryName
       href={`/prodotto/${slug}`}
       className="group flex flex-col overflow-hidden rounded-2xl border border-coffee-100 bg-white shadow-(--shadow-card) transition-all duration-300 ease-out-quart hover:-translate-y-1 hover:border-coffee-200 hover:shadow-(--shadow-lift)"
     >
-      <div className="relative aspect-square overflow-hidden bg-coffee-100">
+      <div className="relative aspect-[3/2] overflow-hidden bg-coffee-100">
         <ProductImage
           src={image}
           alt={name}

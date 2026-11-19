@@ -141,7 +141,7 @@ export function CheckoutForm(props: Props) {
           <ul className="mt-5 space-y-3 border-b border-coffee-100 pb-5">
             {props.items.map((it) => (
               <li key={it.id} className="flex items-center gap-3">
-                <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-coffee-100">
+                <div className="relative h-14 w-21 shrink-0 overflow-hidden rounded-lg bg-coffee-100">
                   <ProductImage src={it.image} alt={it.name} />
                   <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-coffee-800 px-1 text-xs font-semibold text-cream">
                     {it.quantity}

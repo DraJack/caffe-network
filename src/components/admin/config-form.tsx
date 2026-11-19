@@ -24,7 +24,14 @@ type Config = {
 const euro = (cents: number) => (cents / 100).toFixed(2);
 const toCents = (v: string) => Math.round(parseFloat(v) * 100) || 0;
 
-export function ConfigForm({ config }: { config: Config }) {
+export function ConfigForm({
+  config,
+  referenceCents,
+}: {
+  config: Config;
+  /** Confezione più economica del catalogo; null se il catalogo è vuoto. */
+  referenceCents: number | null;
+}) {
   const [form, setForm] = useState({
     flatShipping: euro(config.flatShippingCents),
     freeShipping: euro(config.freeShippingThreshold),
@@ -47,8 +54,9 @@ export function ConfigForm({ config }: { config: Config }) {
   // Anteprima live: rende leggibile l'impatto del piano prima di salvarlo.
   const planCents = toCents(form.l1) + toCents(form.l2) + toCents(form.l3)
     + toCents(form.l4) + toCents(form.l5);
-  const referenceCents = 5000; // ordine tipo da 50€
-  const planPercent = Math.round((planCents / referenceCents) * 1000) / 10;
+  const planPercent = referenceCents
+    ? Math.round((planCents / referenceCents) * 1000) / 10
+    : 0;
   const overCap = planPercent > (parseInt(form.maxCommissionPercent) || 0);
 
   const save = () =>
@@ -101,8 +109,17 @@ export function ConfigForm({ config }: { config: Config }) {
         ))}
 
         <div className="rounded-xl bg-coffee-50 p-3 text-sm text-coffee-700">
-          Su un ordine da <strong>{formatEuro(referenceCents)}</strong> distribuisci{" "}
-          <strong>{formatEuro(planCents)}</strong> ({planPercent}%).
+          {referenceCents ? (
+            <>
+              Sulla confezione più economica del catalogo (
+              <strong>{formatEuro(referenceCents)}</strong>) distribuisci{" "}
+              <strong>{formatEuro(planCents)}</strong> ({planPercent}%).
+            </>
+          ) : (
+            <>
+              Distribuisci <strong>{formatEuro(planCents)}</strong> per confezione.
+            </>
+          )}
           {overCap && (
             <span className="mt-1 block text-red-700">
               Attenzione: il piano supera il tetto del {form.maxCommissionPercent}%, quindi

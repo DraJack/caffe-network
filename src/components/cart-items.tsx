@@ -53,7 +53,7 @@ export function CartItems({ items }: { items: Item[] }) {
           >
             <Link
               href={`/prodotto/${it.slug}`}
-              className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-coffee-100"
+              className="h-20 w-30 shrink-0 overflow-hidden rounded-xl bg-coffee-100"
             >
               <ProductImage src={it.image} alt={it.name} />
             </Link>

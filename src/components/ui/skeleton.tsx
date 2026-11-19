@@ -10,7 +10,7 @@ export function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivEl
 export function ProductCardSkeleton() {
   return (
     <div className="overflow-hidden rounded-2xl border border-coffee-100 bg-white shadow-(--shadow-soft)">
-      <Skeleton className="aspect-square rounded-none" />
+      <Skeleton className="aspect-[3/2] rounded-none" />
       <div className="flex flex-col gap-2 p-4">
         <Skeleton className="h-4 w-16" />
         <Skeleton className="h-5 w-3/4" />

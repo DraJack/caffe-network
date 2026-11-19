@@ -31,7 +31,7 @@ export async function getCart() {
     name: it.variant.product.name,
     variantName: it.variant.name,
     slug: it.variant.product.slug,
-    image: it.variant.product.images[0] ?? null,
+    image: it.variant.image ?? it.variant.product.images[0] ?? null,
     priceCents: it.variant.priceCents,
     lineCents: it.variant.priceCents * it.quantity,
     stock: it.variant.stock,

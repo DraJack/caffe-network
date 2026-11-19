@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Share2, Coins, Wallet, ArrowRight } from "lucide-react";
 import { getStoreConfig } from "@/lib/config";
+import { getReferencePackCents } from "@/server/catalog";
 import { formatEuro, cn } from "@/lib/utils";
 import { COMMISSION_DEPTH, levelRateCents, planTotalCents } from "@/lib/commissions";
 import { Button } from "@/components/ui/button";
@@ -27,10 +28,9 @@ export const metadata = {
 };
 
 export default async function ConsulentiPage() {
-  const config = await getStoreConfig();
+  const [config, referenceCents] = await Promise.all([getStoreConfig(), getReferencePackCents()]);
   const levels = Array.from({ length: COMMISSION_DEPTH }, (_, i) => i + 1);
   const planCents = planTotalCents(config);
-  const reference = 5000; // confezione di riferimento
 
   // Le tariffe partono da qui e attraversano tutta la pagina: il simulatore è un
   // client component, quindi le riceve già risolte da StoreConfig.
@@ -196,7 +196,8 @@ export default async function ConsulentiPage() {
               title: "Esempio",
               body: (
                 <>
-                  Una persona che hai invitato compra 3 confezioni da {formatEuro(reference)}: tu
+                  Una persona che hai invitato compra 3 confezioni
+                  {referenceCents !== null && <> da {formatEuro(referenceCents)}</>}: tu
                   ricevi {formatEuro(levelRateCents(1, config) * 3)}. Se a comprare è qualcuno che si
                   trova due passaggi sotto di te, ricevi{" "}
                   {formatEuro(levelRateCents(2, config) * 3)}.

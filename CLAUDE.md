@@ -134,7 +134,7 @@ src/components/             Componenti UI e di dominio (ui/ = primitive)
 **Provvigioni (Fase 2) — il cuore del sistema.**
 
 Piano **unilevel a 5 livelli**, importo **fisso per confezione acquistata** (non percentuale):
-L1 10€ · L2 2€ · L3 2€ · L4 2€ · L5 3€ ⇒ 19€ su un ordine da 50€ (38%). Scala col volume:
+L1 10€ · L2 2€ · L3 2€ · L4 2€ · L5 3€ ⇒ 19€ su una confezione da 70€ (27%). Scala col volume:
 3 confezioni ⇒ 30/6/6/6/9€. Le tariffe stanno in `StoreConfig` e sono modificabili da admin.
 
 - **Chi guadagna:** *tutti* gli utenti registrati con una downline. Nessun gate di ruolo, nessuna
@@ -159,6 +159,15 @@ L1 10€ · L2 2€ · L3 2€ · L4 2€ · L5 3€ ⇒ 19€ su un ordine da 5
 - **Prelievi:** wallet interno + bonifico manuale. `requestPayout` matura le provvigioni scadute
   *dentro la propria transazione* prima di calcolare il disponibile, così un cron saltato non può
   bloccare né sottopagare un prelievo. Una sola richiesta aperta per volta.
+
+**Catalogo.** Un'unica miscela (**Gran Crema**, 70% Robusta / 30% Arabica, tostatura scura) in
+più formati compatibili, tutti a **70 €** per 150 pezzi. Il seed è la fonte di verità del
+catalogo: descrizione, prezzo e scheda (`Product.specs`, lista `{label, value}`) sono costanti
+condivise in `prisma/seed.ts`. Il primo paragrafo della descrizione (separato da riga vuota) è
+mostrato in evidenza. Le foto stanno in `public/images/prodotti/` (banner **3:2**: schede e
+pagina prodotto sono 3:2, non quadrate). `ProductVariant.image` dà una foto per formato (cialde
+44 vs 38 mm); se manca si usa `Product.images[0]`. I prezzi di esempio in `/consulenti` e
+`/admin/impostazioni` si leggono dal catalogo con `getReferencePackCents()`.
 
 **Ordini:** `PENDING → PAID → SHIPPED → DELIVERED` (o `CANCELLED`).
 - `createOrderFromCart` ricalcola **sempre** i totali lato server e svuota il carrello.
@@ -246,7 +255,7 @@ Da affrontare prima del go-live reale (serve P.IVA):
 - **IVA** e **fatturazione elettronica (SdI)**: da integrare al go-live.
 - Termini di vendita, diritto di recesso, resi.
 
-**Margine.** 38% di payout è alto: va verificato contro il costo reale del prodotto (caffè +
+**Margine.** 27% di payout (19€ su 70€) resta significativo: va verificato contro il costo reale del prodotto (caffè +
 packaging + spedizione + ~1,5% Stripe). Il tetto al 40% protegge dai casi limite, **non** dal
 margine strutturale.
 

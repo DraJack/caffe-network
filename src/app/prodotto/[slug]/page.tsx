@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { ProductDetail } from "@/components/product-detail";
-import { getProductBySlug } from "@/server/catalog";
+import { getProductBySlug, parseSpecs } from "@/server/catalog";
 
 export const dynamic = "force-dynamic";
 
@@ -22,12 +22,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       origin={product.origin}
       roast={product.roastLevel}
       image={product.images[0] ?? null}
+      specs={parseSpecs(product.specs)}
       categoryName={product.category?.name ?? null}
       variants={product.variants.map((v) => ({
         id: v.id,
         name: v.name,
         priceCents: v.priceCents,
         stock: v.stock,
+        image: v.image,
       }))}
     />
   );

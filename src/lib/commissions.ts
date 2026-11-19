@@ -1,7 +1,7 @@
 // Logica di calcolo del piano provvigionale unilevel (Fase 2).
 //
 // Importo FISSO in centesimi per confezione provvigionabile, non percentuale:
-// su un ordine da 50€ (1 unità) escono 10€ / 2€ / 2€ / 2€ / 3€ = 19€ (38%).
+// su una confezione da 70€ (1 unità) escono 10€ / 2€ / 2€ / 2€ / 3€ = 19€ (27%).
 // Scala col volume: 3 confezioni ⇒ 30/6/6/6/9€.
 //
 // Nessun accesso al DB e nessun import: la funzione è pura, quindi è testabile
