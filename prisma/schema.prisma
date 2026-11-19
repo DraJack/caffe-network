@@ -105,6 +105,8 @@ model Product {
   specs       Json?
   active      Boolean  @default(true)
   featured    Boolean  @default(false)
+  // Ordine di vetrina (crescente) in homepage, catalogo e admin. Lo assegna il seed.
+  position    Int      @default(0)
 
   categoryId  String?
   category    Category? @relation(fields: [categoryId], references: [id])

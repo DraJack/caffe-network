@@ -120,7 +120,9 @@ export function ProductDetail({
             {name}
           </h1>
 
-          {origin && <p className="mt-3 text-sm text-coffee-600">{origin}</p>}
+          {origin && (
+            <p className="mt-3 whitespace-pre-line text-sm text-coffee-600">{origin}</p>
+          )}
 
           <p className="mt-5 text-balance font-heading text-xl font-semibold leading-snug text-accent-dark">
             {lead}

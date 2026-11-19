@@ -34,9 +34,8 @@ export async function getFeaturedProducts(limit = 4) {
   const products = await prisma.product.findMany({
     where: { active: true, featured: true },
     include: { variants: true, category: true },
-    // Ordine stabile: senza, con più "featured" dei posti la scelta sarebbe casuale.
-    // I più vecchi per primi, così il prodotto storico (le cialde) resta sempre in homepage.
-    orderBy: { createdAt: "asc" },
+    // Ordine di vetrina deciso nel seed; createdAt solo come spareggio stabile.
+    orderBy: [{ position: "asc" }, { createdAt: "asc" }],
     take: limit,
   });
   return products.map(toCard);
@@ -74,7 +73,7 @@ export async function getProducts(opts: { categorySlug?: string; roast?: string;
   const products = await prisma.product.findMany({
     where,
     include: { variants: true, category: true },
-    orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+    orderBy: [{ position: "asc" }, { createdAt: "asc" }],
   });
   return products.map(toCard);
 }

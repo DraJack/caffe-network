@@ -33,7 +33,7 @@ export function ProductCard({ slug, name, image, origin, fromCents, categoryName
         <h3 className="mt-1 font-heading text-base font-semibold leading-snug text-coffee-900 transition-colors group-hover:text-accent-dark">
           {name}
         </h3>
-        {origin && <p className="text-sm text-coffee-500">{origin}</p>}
+        {origin && <p className="whitespace-pre-line text-sm text-coffee-500">{origin}</p>}
         <p className="mt-auto pt-3 text-coffee-800">
           <span className="text-xs text-coffee-500">da </span>
           <span className="font-heading text-lg font-semibold">{formatEuro(fromCents)}</span>

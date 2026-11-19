@@ -142,11 +142,16 @@ async function main() {
   // Ai due referral extra la vetrina non serve: restano gli unici utenti senza
   // profilo, così il percorso di creazione lazy resta testabile dopo il seed.
 
-  // Categorie — un solo caffè in più formati: basta una categoria.
-  const categorie = [{ slug: "capsule", name: "Cialde e Capsule", position: 1 }];
+  // Categorie — la sola cosa che distingue i prodotti è il formato: l'etichetta della
+  // scheda dice "Cialde" o "Capsule", non un generico "Cialde e Capsule".
+  const categorie = [
+    { slug: "cialde", name: "Cialde", position: 1 },
+    { slug: "capsule", name: "Capsule", position: 2 },
+  ];
   for (const c of categorie) {
     await prisma.category.upsert({ where: { slug: c.slug }, update: c, create: c });
   }
+  const cialde = await prisma.category.findUniqueOrThrow({ where: { slug: "cialde" } });
   const capsule = await prisma.category.findUniqueOrThrow({ where: { slug: "capsule" } });
 
   // Placeholder per i formati ancora senza foto: 3:2 come i banner reali,
@@ -159,11 +164,14 @@ async function main() {
   // cambia solo la riga di compatibilità per formato.
   const PRICE_CENTS = 7000;
   // Il nome inizia già con "Gran Crema": qui solo la composizione, senza ripeterlo.
-  const ORIGIN = "Miscela 70% Robusta / 30% Arabica";
+  // Tre righe (resa con whitespace-pre-line in scheda e pagina prodotto).
+  const ORIGIN = "Miscela\n70% Robusta\n30% Arabica";
   const SPECS = [
     { label: "Retrogusto", value: "Rotondo" },
     { label: "Colore schiuma", value: "Marrone bruno" },
   ];
+  // Pezzi per confezione: le cialde sono da 150, le capsule da 100.
+  const PACK = { cialda: 150, capsula: 100 } as const;
   // Tre paragrafi separati da doppio a capo: lo slogan (reso in evidenza) riprende quello
   // stampato sulle foto, poi la miscela, poi compatibilità + confezione + nota sui marchi.
   // Nei nomi e nei testi i marchi altrui compaiono solo dopo "compatibili": citarli per
@@ -172,15 +180,17 @@ async function main() {
     `Il grande caffè, ${format === "cialda" ? "in una cialda di qualità" : "in una piccola capsula"}.` +
     `\n\nLa nostra miscela Gran Crema ha un carattere spiccato e incisivo, una straordinaria ` +
     `aromaticità e una crema vellutata. Più gusto, più energia, ogni giorno.` +
-    `\n\n${formatLine} Marchi citati di proprietà dei rispettivi titolari, non affiliati a AS Life.`;
+    `\n\n${formatLine} Confezione da ${PACK[format]} ${format === "cialda" ? "cialde" : "capsule"}. ` +
+    `Marchi citati di proprietà dei rispettivi titolari, non affiliati a AS Life.`;
+  const cialdaPack = `${PACK.cialda} cialde`;
+  const capsulaPack = `${PACK.capsula} capsule`;
 
-  const prodotti: Array<{
+  type SeedProduct = {
     slug: string;
     name: string;
     description: string;
     origin?: string;
     roastLevel?: RoastLevel;
-    categoryId: string;
     featured?: boolean;
     images?: string[];
     variants: {
@@ -191,46 +201,44 @@ async function main() {
       commissionUnits?: number;
       image?: string;
     }[];
-  }> = [
+  };
+
+  // L'ordine dell'array È l'ordine di vetrina: diventa Product.position, usato sia in
+  // homepage (i primi 4) sia nel catalogo. Cialde prima, poi Lavazza Firma e Blue.
+  const prodottiCialde: SeedProduct[] = [
     {
-      // Unico prodotto con due varianti (i due diametri standard), ognuna con la sua foto.
-      // Slug invariato: i link già condivisi devono continuare a funzionare.
-      slug: "cialde-carta-ese",
-      name: "Gran Crema — Cialde compatibili Frog® 44/38 mm",
+      slug: "cialde-frog-44",
+      name: "Gran Crema — Cialde compatibili Frog® 44 mm",
       description: desc(
         "cialda",
-        "Cialde in carta filtro nei diametri 44 mm e 38 mm, compatibili con tutte le macchine " +
-          "Frog® didiesse e con le macchine a cialda ESE. Confezione da 150 cialde.",
+        "Cialde in carta filtro da 44 mm, compatibili con tutte le macchine Frog® didiesse " +
+          "e con le macchine a cialda ESE.",
       ),
       featured: true,
-      images: [photo("cialde-frog-44mm.webp"), photo("cialde-frog-38mm.webp")],
-      variants: [
-        {
-          sku: "CIA-ESE-44",
-          name: "44 mm (150 cialde)",
-          priceCents: PRICE_CENTS,
-          stock: 150,
-          image: photo("cialde-frog-44mm.webp"),
-        },
-        {
-          sku: "CIA-ESE-38",
-          name: "38 mm (150 cialde)",
-          priceCents: PRICE_CENTS,
-          stock: 150,
-          image: photo("cialde-frog-38mm.webp"),
-        },
-      ],
+      images: [photo("cialde-frog-44mm.webp")],
+      variants: [{ sku: "CIA-FROG-44-150", name: cialdaPack, priceCents: PRICE_CENTS, stock: 150 }],
     },
     {
-      slug: "capsule-a-modo-mio",
-      name: "Gran Crema — Capsule compatibili A Modo Mio®",
+      slug: "cialde-frog-38",
+      name: "Gran Crema — Cialde compatibili Frog® 38 mm",
       description: desc(
-        "capsula",
-        "Compatibili con tutte le macchine Lavazza® A Modo Mio®. Confezione da 150 capsule.",
+        "cialda",
+        "Cialde in carta filtro da 38 mm, compatibili con tutte le macchine Frog® didiesse.",
       ),
       featured: true,
-      images: [photo("capsule-lavazza-a-modo-mio.webp")],
-      variants: [{ sku: "CAP-AMM-150", name: "150 capsule", priceCents: PRICE_CENTS, stock: 150 }],
+      images: [photo("cialde-frog-38mm.webp")],
+      variants: [{ sku: "CIA-FROG-38-150", name: cialdaPack, priceCents: PRICE_CENTS, stock: 150 }],
+    },
+  ];
+
+  const prodottiCapsule: SeedProduct[] = [
+    {
+      slug: "capsule-lavazza-firma",
+      name: "Gran Crema — Capsule compatibili Lavazza Firma®",
+      description: desc("capsula", "Compatibili con tutte le macchine Lavazza® Firma®."),
+      featured: true,
+      images: [photo("capsule-lavazza-firma.webp")],
+      variants: [{ sku: "CAP-FIRMA-100", name: capsulaPack, priceCents: PRICE_CENTS, stock: 150 }],
     },
     {
       // Le macchine Lavazza In Black usano le capsule del sistema Lavazza Blue.
@@ -239,43 +247,47 @@ async function main() {
       description: desc(
         "capsula",
         "Compatibili con i sistemi Lavazza® Blue® e con tutte le macchine Lavazza® In Black®, " +
-          "ideali anche per l'ufficio. Confezione da 150 capsule.",
+          "ideali anche per l'ufficio.",
       ),
       featured: true,
       images: [photo("capsule-lavazza-blue-in-black.webp")],
-      variants: [
-        { sku: "CAP-BLUE-150", name: "150 capsule", priceCents: PRICE_CENTS, stock: 150 },
-      ],
+      variants: [{ sku: "CAP-BLUE-100", name: capsulaPack, priceCents: PRICE_CENTS, stock: 150 }],
     },
     {
-      slug: "capsule-lavazza-firma",
-      name: "Gran Crema — Capsule compatibili Lavazza Firma®",
-      description: desc(
-        "capsula",
-        "Compatibili con tutte le macchine Lavazza® Firma®. Confezione da 150 capsule.",
-      ),
-      featured: true,
-      images: [photo("capsule-lavazza-firma.webp")],
-      variants: [
-        { sku: "CAP-FIRMA-150", name: "150 capsule", priceCents: PRICE_CENTS, stock: 150 },
-      ],
+      slug: "capsule-a-modo-mio",
+      name: "Gran Crema — Capsule compatibili A Modo Mio®",
+      description: desc("capsula", "Compatibili con tutte le macchine Lavazza® A Modo Mio®."),
+      images: [photo("capsule-lavazza-a-modo-mio.webp")],
+      variants: [{ sku: "CAP-AMM-100", name: capsulaPack, priceCents: PRICE_CENTS, stock: 150 }],
     },
     {
       slug: "capsule-lavazza-point",
       name: "Gran Crema — Capsule compatibili Espresso Point®",
-      description: desc(
-        "capsula",
-        "Compatibili con tutte le macchine Lavazza® Espresso Point®. Confezione da 150 capsule.",
-      ),
-      featured: true,
+      description: desc("capsula", "Compatibili con tutte le macchine Lavazza® Espresso Point®."),
       images: [photo("capsule-espresso-point.webp")],
-      variants: [
-        { sku: "CAP-POINT-150", name: "150 capsule", priceCents: PRICE_CENTS, stock: 150 },
-      ],
+      variants: [{ sku: "CAP-POINT-100", name: capsulaPack, priceCents: PRICE_CENTS, stock: 150 }],
     },
-    // Nespresso, Dolce Gusto e Lavazza Bidose sono stati tolti finché non ci sono le foto:
-    // il prune qui sotto li elimina anche dal database. Per riaggiungerli basta una voce qui.
-  ].map((p) => ({ origin: ORIGIN, roastLevel: "DARK" as const, categoryId: capsule.id, ...p }));
+    {
+      slug: "capsule-nespresso",
+      name: "Gran Crema — Capsule compatibili Nespresso®",
+      description: desc("capsula", "Compatibili con tutte le macchine Nespresso®."),
+      images: [photo("capsule-nespresso.webp")],
+      variants: [{ sku: "CAP-NES-100", name: capsulaPack, priceCents: PRICE_CENTS, stock: 150 }],
+    },
+    {
+      slug: "capsule-dolce-gusto",
+      name: "Gran Crema — Capsule compatibili Dolce Gusto®",
+      description: desc("capsula", "Compatibili con tutte le macchine Nescafé® Dolce Gusto®."),
+      images: [photo("capsule-dolce-gusto.webp")],
+      variants: [{ sku: "CAP-DG-100", name: capsulaPack, priceCents: PRICE_CENTS, stock: 150 }],
+    },
+    // Lavazza Bidose resta fuori finché non c'è la foto: per aggiungerlo basta una voce qui.
+  ];
+
+  const prodotti = [
+    ...prodottiCialde.map((p) => ({ ...p, categoryId: cialde.id })),
+    ...prodottiCapsule.map((p) => ({ ...p, categoryId: capsule.id })),
+  ].map((p, position) => ({ origin: ORIGIN, roastLevel: "DARK" as const, position, ...p }));
 
   for (const p of prodotti) {
     const { variants, images, ...data } = p;
@@ -318,7 +330,7 @@ async function main() {
 
   // Prodotto di riferimento degli ordini demo.
   const signature = await prisma.productVariant.findUniqueOrThrow({
-    where: { sku: "CAP-AMM-150" },
+    where: { sku: "CAP-FIRMA-100" },
     include: { product: { select: { name: true } } },
   });
 

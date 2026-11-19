@@ -161,13 +161,15 @@ L1 10€ · L2 2€ · L3 2€ · L4 2€ · L5 3€ ⇒ 19€ su una confezione
   bloccare né sottopagare un prelievo. Una sola richiesta aperta per volta.
 
 **Catalogo.** Un'unica miscela (**Gran Crema**, 70% Robusta / 30% Arabica, tostatura scura) in
-più formati compatibili, tutti a **70 €** per 150 pezzi. Il seed è la fonte di verità del
+più formati compatibili, tutti a **70 €** (cialde da 150, capsule da 100). Il seed è la fonte di verità del
 catalogo: descrizione, prezzo e scheda (`Product.specs`, lista `{label, value}`) sono costanti
 condivise in `prisma/seed.ts`. Il primo paragrafo della descrizione (separato da riga vuota) è
 mostrato in evidenza. Le foto stanno in `public/images/prodotti/` (banner **3:2**: schede e
 pagina prodotto sono 3:2, non quadrate). `ProductVariant.image` dà una foto per formato (cialde
 44 vs 38 mm); se manca si usa `Product.images[0]`. I prezzi di esempio in `/consulenti` e
 `/admin/impostazioni` si leggono dal catalogo con `getReferencePackCents()`.
+L'ordine dei prodotti è `Product.position`, assegnato dal seed in base all'ordine dell'array
+(homepage = i primi 4 `featured`): cialde Frog 44 e 38, poi Lavazza Firma e Blue, poi il resto.
 
 **Ordini:** `PENDING → PAID → SHIPPED → DELIVERED` (o `CANCELLED`).
 - `createOrderFromCart` ricalcola **sempre** i totali lato server e svuota il carrello.
