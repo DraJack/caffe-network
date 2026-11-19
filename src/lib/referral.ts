@@ -25,6 +25,14 @@ export function normalizeReferralCode(raw: string): string {
 
 /** URL completo da condividere. */
 export function referralUrl(code: string, baseUrl?: string): string {
+  return referralPathUrl("/", code, baseUrl);
+}
+
+/**
+ * Link a una pagina qualsiasi con attribuzione: src/proxy.ts legge `?ref=` su
+ * ogni percorso, quindi anche /prodotto/... porta il cookie.
+ */
+export function referralPathUrl(path: string, code: string, baseUrl?: string): string {
   const base = baseUrl ?? process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  return `${base}/?ref=${code}`;
+  return `${base}${path}?ref=${encodeURIComponent(code)}`;
 }

@@ -88,3 +88,22 @@ export async function getProductBySlug(slug: string) {
     include: { variants: { orderBy: [{ priceCents: "asc" }, { id: "asc" }] }, category: true },
   });
 }
+
+/**
+ * Tutti i formati attivi, per il selettore "La tua macchina": la miscela è la stessa,
+ * cambia solo la compatibilità, quindi i prodotti gemelli sono di fatto varianti.
+ * Ordine di vetrina (Product.position), raggruppati poi per categoria nella UI.
+ */
+export async function getMachineOptions() {
+  const products = await prisma.product.findMany({
+    where: { active: true, variants: { some: {} } },
+    select: { slug: true, name: true, category: { select: { name: true, position: true } } },
+    orderBy: [{ position: "asc" }, { createdAt: "asc" }],
+  });
+  return products.map((p) => ({
+    slug: p.slug,
+    name: p.name,
+    group: p.category?.name ?? "Altro",
+    groupPosition: p.category?.position ?? Number.MAX_SAFE_INTEGER,
+  }));
+}

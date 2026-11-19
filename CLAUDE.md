@@ -105,6 +105,8 @@ src/lib/                    Utilità condivise:
   slug.ts                   Slug del mini-sito: riservati + baseProfileSlug() (importato dal seed)
   mini-site.ts              Temi, frasi, iniziali, URL vetrina — hex grezzi, li usa anche next/og
   config.ts                 StoreConfig (spedizione + piano provvigionale) con default
+  product.ts                Pagina prodotto: parsePack, machineLabel, parseBlend — PURE, null se il dato non torna
+  product-faq.ts            FAQ della pagina prodotto (BOZZA: allineata a /spedizioni, da rivedere al go-live)
   utils.ts                  cn(), formatEuro(), slugify()
 src/server/                 Logica server (solo lato server):
   catalog.ts                Query catalogo
@@ -134,8 +136,8 @@ src/components/             Componenti UI e di dominio (ui/ = primitive)
 **Provvigioni (Fase 2) — il cuore del sistema.**
 
 Piano **unilevel a 5 livelli**, importo **fisso per confezione acquistata** (non percentuale):
-L1 10€ · L2 2€ · L3 2€ · L4 2€ · L5 3€ ⇒ 19€ su una confezione da 70€ (27%). Scala col volume:
-3 confezioni ⇒ 30/6/6/6/9€. Le tariffe stanno in `StoreConfig` e sono modificabili da admin.
+L1 10€ · L2 2€ · L3 2€ · L4 3€ · L5 3€ ⇒ 20€ su una confezione da 70€ (29%). Scala col volume:
+3 confezioni ⇒ 30/6/6/9/9€. Le tariffe stanno in `StoreConfig` e sono modificabili da admin.
 
 - **Chi guadagna:** *tutti* gli utenti registrati con una downline. Nessun gate di ruolo, nessuna
   quota d'iscrizione. `ConsultantProfile` (il mini-sito) nasce automaticamente con l'account.
@@ -170,6 +172,19 @@ pagina prodotto sono 3:2, non quadrate). `ProductVariant.image` dà una foto per
 `/admin/impostazioni` si leggono dal catalogo con `getReferencePackCents()`.
 L'ordine dei prodotti è `Product.position`, assegnato dal seed in base all'ordine dell'array
 (homepage = i primi 4 `featured`): cialde Frog 44 e 38, poi Lavazza Firma e Blue, poi il resto.
+
+**Pagina prodotto: i nomi sono dati.** Nessuna colonna dedicata, si ricava tutto da `src/lib/product.ts`:
+- il selettore *«Scegli la tua macchina»* (primo passo, sopra il prezzo: card nera con la scelta,
+  tile con le alternative che sono link ai prodotti gemelli) usa la parte del nome dopo
+  **"compatibili "** → mantieni il formato `Gran Crema — <Formato> compatibili <Macchina>`;
+- l'icona di ogni formato è una silhouette SVG nostra (`src/components/product/pod-icons.tsx`,
+  scelta per parola chiave nell'etichetta). ⚠️ Mai loghi altrui. Un formato nuovo prende l'icona
+  generica del gruppo finché non gli si disegna la sua;
+- la scheda *«La miscela»* (sotto foto e rassicurazioni) prende il nome miscela dalla parte prima del «—»;
+- il prezzo a pezzo legge il nome variante **"<N> cialde|capsule"** (un'altra unità ⇒ niente prezzo a pezzo);
+- la barra di composizione legge `origin` a righe `NN% Nome`, solo se sommano a 100.
+Se il dato non ha la forma attesa la parte di UI sparisce, la pagina non si rompe. Il selettore
+varianti compare solo con più di una variante. La barra d'acquisto fissa è solo mobile (z-30).
 
 **Ordini:** `PENDING → PAID → SHIPPED → DELIVERED` (o `CANCELLED`).
 - `createOrderFromCart` ricalcola **sempre** i totali lato server e svuota il carrello.
@@ -257,7 +272,7 @@ Da affrontare prima del go-live reale (serve P.IVA):
 - **IVA** e **fatturazione elettronica (SdI)**: da integrare al go-live.
 - Termini di vendita, diritto di recesso, resi.
 
-**Margine.** 27% di payout (19€ su 70€) resta significativo: va verificato contro il costo reale del prodotto (caffè +
+**Margine.** 29% di payout (20€ su 70€) resta significativo: va verificato contro il costo reale del prodotto (caffè +
 packaging + spedizione + ~1,5% Stripe). Il tetto al 40% protegge dai casi limite, **non** dal
 margine strutturale.
 

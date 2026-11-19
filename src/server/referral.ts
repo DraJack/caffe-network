@@ -90,3 +90,12 @@ export async function allocateReferralCode(attempts = 5): Promise<string> {
   // Fallback: allunga il codice per rendere la collisione trascurabile.
   return generateReferralCode(12);
 }
+
+/**
+ * Codice invito dell'utente loggato, letto dal DB e non dal JWT: il token non lo
+ * contiene e comunque potrebbe essere vecchio (vedi CLAUDE.md §6, Ruoli).
+ */
+export async function getReferralCode(userId: string): Promise<string | null> {
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { referralCode: true } });
+  return user?.referralCode ?? null;
+}

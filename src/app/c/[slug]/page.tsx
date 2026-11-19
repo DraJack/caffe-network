@@ -86,7 +86,7 @@ export default async function ConsultantSitePage({ params }: Props) {
 
           <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {products.map((product, i) => (
-              <Reveal key={product.slug} delay={i * 90}>
+              <Reveal key={product.slug} delay={i * 90} className="h-full">
                 <ProductCard {...product} />
               </Reveal>
             ))}

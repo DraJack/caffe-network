@@ -35,7 +35,7 @@ export default async function CatalogoPage() {
       ) : (
         <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4">
           {products.map((p, i) => (
-            <Reveal key={p.slug} delay={Math.min(i, 7) * 60}>
+            <Reveal key={p.slug} delay={Math.min(i, 7) * 60} className="h-full">
               <ProductCard {...p} />
             </Reveal>
           ))}
