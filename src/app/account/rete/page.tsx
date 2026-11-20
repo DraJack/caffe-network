@@ -103,7 +103,7 @@ export default async function NetworkPage() {
           className="mt-5"
           icon={<Users className="h-7 w-7" />}
           title="La tua rete è ancora vuota"
-          description="Condividi il tuo link con chi apprezza il buon caffè: entreranno nella tua rete al primo acquisto."
+          description="Condividi il tuo link con chi apprezza il buon caffè: chi si registra dal tuo link entra nella tua rete, e guadagni su ogni suo acquisto."
           action={{ label: "Come funziona il piano", href: "/consulenti" }}
         />
       ) : (

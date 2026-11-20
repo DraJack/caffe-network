@@ -13,7 +13,7 @@ export default function ChiSiamoPage() {
     >
       <Prose title="Cosa facciamo">
         <p>
-          Selezioniamo miscele e single origin e li tostiamo in piccoli lotti, così il caffè arriva
+          Selezioniamo la nostra miscela e la tostiamo in piccoli lotti, così il caffè arriva
           fresco invece che fermo in magazzino. Vendiamo online, direttamente, senza intermediari
           fra la torrefazione e la tua tazza.
         </p>

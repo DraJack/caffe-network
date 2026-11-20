@@ -22,7 +22,7 @@ export default async function CartPage() {
         <EmptyState
           icon={<ShoppingBag className="h-8 w-8" />}
           title="Il carrello è vuoto"
-          description="Non hai ancora aggiunto nulla. Dai un'occhiata alle nostre miscele e ai single origin."
+          description="Non hai ancora aggiunto nulla. Scegli il formato di Gran Crema adatto alla tua macchina."
           action={{ label: "Vai al catalogo", href: "/catalogo" }}
         />
       </div>

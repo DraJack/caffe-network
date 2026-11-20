@@ -59,8 +59,8 @@ export default async function HomePage() {
               className="mt-6 max-w-md animate-fade-up text-lg leading-relaxed text-coffee-300"
               style={{ animationDelay: "160ms" }}
             >
-              Miscele e single origin selezionati. Acquista online e, se vuoi, invita chi vuoi:
-              guadagni una provvigione su ogni loro ordine.
+              Gran Crema, la nostra miscela intensa, nel formato giusto per la tua macchina. Se vuoi,
+              invita chi vuoi: guadagni una provvigione su ogni loro ordine.
             </p>
             <div
               className="mt-9 flex animate-fade-up flex-wrap gap-3"
@@ -159,7 +159,7 @@ export default async function HomePage() {
               {
                 icon: <Share2 className="h-5 w-5" />,
                 title: "Condividi il link",
-                body: "Chi acquista dal tuo link entra nella tua rete, fino a cinque livelli di profondità.",
+                body: "Chi si registra dal tuo link entra nella tua rete: guadagni sui suoi acquisti, fino a cinque livelli.",
               },
               {
                 icon: <Wallet className="h-5 w-5" />,

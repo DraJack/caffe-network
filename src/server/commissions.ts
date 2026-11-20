@@ -73,7 +73,6 @@ export async function downlineCounts(userId: string): Promise<DownlineCount[]> {
 export type DownlineMember = {
   id: string;
   name: string | null;
-  email: string;
   level: number;
   createdAt: Date;
 };
@@ -81,20 +80,23 @@ export type DownlineMember = {
 /**
  * Elenco della downline, limitato: un albero a 5 livelli cresce in modo
  * esponenziale e non va mai materializzato per intero in memoria.
+ *
+ * Niente email: chi sta 2-5 livelli sotto non ha mai dato il proprio contatto a
+ * chi sta sopra (GDPR, minimizzazione). Si espongono solo nome e data.
  */
 export async function downlineMembers(userId: string, limit = 100): Promise<DownlineMember[]> {
   return prisma.$queryRaw<DownlineMember[]>`
     WITH RECURSIVE downline AS (
-      SELECT u.id, u.name, u.email, u."createdAt", 1 AS level, ARRAY[${userId}::text] AS path
+      SELECT u.id, u.name, u."createdAt", 1 AS level, ARRAY[${userId}::text] AS path
       FROM "User" u
       WHERE u."sponsorId" = ${userId} AND u.id <> ${userId}
       UNION ALL
-      SELECT c.id, c.name, c.email, c."createdAt", d.level + 1, d.path || d.id
+      SELECT c.id, c.name, c."createdAt", d.level + 1, d.path || d.id
       FROM downline d
       JOIN "User" c ON c."sponsorId" = d.id
       WHERE d.level < ${COMMISSION_DEPTH} AND c.id <> ALL(d.path)
     )
-    SELECT id, name, email, level, "createdAt"
+    SELECT id, name, level, "createdAt"
     FROM downline ORDER BY level, "createdAt" DESC LIMIT ${limit}
   `;
 }
