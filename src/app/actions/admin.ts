@@ -164,13 +164,27 @@ export async function updateStoreConfig(data: {
 }
 
 /** Segna una richiesta di prelievo come pagata (dopo il bonifico). */
-export async function markPayoutPaid(payoutId: string, adminNote?: string) {
+export async function markPayoutPaid(
+  payoutId: string,
+  adminNote?: string,
+): Promise<{ error?: string }> {
   await requireAdmin();
   const now = new Date();
 
-  await prisma.$transaction(async (tx) => {
+  const error = await prisma.$transaction(async (tx) => {
     const payout = await tx.payoutRequest.findUnique({ where: { id: payoutId } });
-    if (!payout || payout.status !== "REQUESTED") return; // idempotente
+    if (!payout || payout.status !== "REQUESTED") return null; // idempotente
+
+    // Difesa in profondità: l'importo da bonificare deve coincidere con le righe
+    // agganciate. Se non torna (dati corrotti, vecchie richieste duplicate) meglio
+    // fermarsi che pagare un saldo senza copertura nel ledger.
+    const linked = await tx.commission.aggregate({
+      where: { payoutRequestId: payoutId, status: "APPROVED" },
+      _sum: { amountCents: true },
+    });
+    if ((linked._sum.amountCents ?? 0) !== payout.amountCents) {
+      return `Richiesta incoerente: ${formatEuro(payout.amountCents)} richiesti ma ${formatEuro(linked._sum.amountCents ?? 0)} di provvigioni collegate. Rifiutala e falla ripresentare.`;
+    }
 
     await tx.commission.updateMany({
       where: { payoutRequestId: payoutId, status: "APPROVED" },
@@ -181,9 +195,11 @@ export async function markPayoutPaid(payoutId: string, adminNote?: string) {
       data: { status: "PAID", processedAt: now, adminNote: adminNote ?? null },
     });
     await recomputeCommissionBalances(tx, [payout.accountId]);
+    return null;
   }, { timeout: 15_000, maxWait: 5_000 });
 
   revalidatePath("/admin/payout");
+  return error ? { error } : {};
 }
 
 /** Rifiuta una richiesta: le provvigioni tornano disponibili. */
