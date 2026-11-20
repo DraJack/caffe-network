@@ -99,7 +99,11 @@ export function ProductDetail({
 
   const handleAdd = () => {
     startTransition(async () => {
-      await addToCart(selected.id, qty);
+      const res = await addToCart(selected.id, qty);
+      if (!res.ok) {
+        toast(res.error ?? "Impossibile aggiungere al carrello");
+        return;
+      }
       setAdded(true);
       toast(`${name} · ${selected.name} aggiunto al carrello`);
       router.refresh();

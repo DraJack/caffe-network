@@ -14,6 +14,9 @@ export type ShippingInput = {
   postalCode: string;
 };
 
+/** Errore mostrabile all'utente in checkout (messaggio già in italiano). */
+export class CheckoutError extends Error {}
+
 /**
  * Crea un ordine PENDING a partire da un carrello, ricalcolando i totali lato server.
  * Svuota il carrello (i dati sono già "snapshottati" nell'ordine).
@@ -30,9 +33,26 @@ export async function createOrderFromCart(params: {
     where: { token: cartToken },
     include: { items: { include: { variant: { include: { product: true } } } } },
   });
-  if (!cart || cart.items.length === 0) throw new Error("Carrello vuoto");
+  if (!cart || cart.items.length === 0) throw new CheckoutError("Il carrello è vuoto");
 
   const items = cart.items;
+  // Ultima linea di difesa prima del pagamento: il carrello può essere vecchio di
+  // giorni (prodotto disattivato, stock esaurito nel frattempo) o manomesso.
+  for (const it of items) {
+    if (!Number.isInteger(it.quantity) || it.quantity <= 0) {
+      throw new CheckoutError("Il carrello contiene una quantità non valida");
+    }
+    if (!it.variant.product.active) {
+      throw new CheckoutError(`«${it.variant.product.name}» non è più disponibile`);
+    }
+    if (it.quantity > it.variant.stock) {
+      throw new CheckoutError(
+        it.variant.stock > 0
+          ? `Disponibili solo ${it.variant.stock} pezzi di «${it.variant.product.name}»`
+          : `«${it.variant.product.name}» è esaurito`,
+      );
+    }
+  }
   const subtotalCents = items.reduce((s, it) => s + it.variant.priceCents * it.quantity, 0);
   const shippingCents =
     subtotalCents >= config.freeShippingThreshold ? 0 : config.flatShippingCents;

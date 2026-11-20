@@ -7,16 +7,20 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { stripe, STRIPE_ENABLED } from "@/lib/stripe";
 import { CART_COOKIE } from "@/server/cart";
-import { createOrderFromCart, markOrderPaid } from "@/server/orders";
+import { CheckoutError, createOrderFromCart, markOrderPaid } from "@/server/orders";
 
 const schema = z.object({
-  email: z.string().email("Email non valida"),
-  name: z.string().min(2, "Nome richiesto"),
-  line1: z.string().min(3, "Indirizzo richiesto"),
-  line2: z.string().optional(),
-  city: z.string().min(2, "Città richiesta"),
-  province: z.string().min(2, "Provincia richiesta"),
-  postalCode: z.string().min(4, "CAP richiesto"),
+  email: z.string().trim().email("Email non valida").max(254),
+  name: z.string().trim().min(2, "Nome richiesto").max(100, "Nome troppo lungo"),
+  line1: z.string().trim().min(3, "Indirizzo richiesto").max(200, "Indirizzo troppo lungo"),
+  line2: z.string().trim().max(200).optional(),
+  city: z.string().trim().min(2, "Città richiesta").max(100),
+  province: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .regex(/^[A-Z]{2}$/, "Provincia: usa la sigla di 2 lettere (es. MI)"),
+  postalCode: z.string().trim().regex(/^\d{5}$/, "CAP non valido (5 cifre)"),
 });
 
 export type CheckoutState = { error?: string } | undefined;
@@ -41,8 +45,10 @@ export async function startCheckout(
       userId,
       shipping: parsed.data,
     });
-  } catch {
-    return { error: "Il carrello è vuoto o non valido" };
+  } catch (error) {
+    if (error instanceof CheckoutError) return { error: error.message };
+    console.error("createOrderFromCart:", error);
+    return { error: "Non è stato possibile creare l'ordine. Riprova." };
   }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
