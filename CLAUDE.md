@@ -250,8 +250,12 @@ Un codice *digitato* inesistente dà errore; un cookie *scaduto* viene ignorato 
 mostra alcun saluto (non deve mai bloccare una registrazione).
 
 **Ruoli:** `CUSTOMER | CONSULTANT | RESELLER | ADMIN`. Attivi CUSTOMER e ADMIN — le provvigioni
-non dipendono dal ruolo. ⚠️ Le sessioni sono **JWT**: un cambio ruolo non si propaga fino al
-re-login, quindi non fidarsi di `session.user.role` per decisioni sul denaro.
+non dipendono dal ruolo. Le sessioni sono **JWT** (30 giorni), ma il callback `jwt` in
+`src/lib/auth.ts` rilegge l'utente dal DB a ogni richiesta (una query, deduplicata con `cache()`):
+se l'utente non esiste più la sessione viene invalidata (→ `/login`, niente errori P2025 o
+`Cart_userId_fkey`), e il ruolo è sempre quello attuale. Se il DB non risponde il token resta
+valido così com'è. ⚠️ Dopo un reset del DB i vecchi cookie restano in giro: è questo controllo
+a renderli innocui.
 
 **Maturazione automatica:** `GET /api/cron/commissions`, protetta da `CRON_SECRET`, schedulata
 alle 03:00 in `vercel.json`.
