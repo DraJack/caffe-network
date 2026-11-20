@@ -26,6 +26,8 @@ function toCard(p: Prisma.ProductGetPayload<{ include: { variants: true; categor
     image: p.images[0] ?? null,
     origin: p.origin,
     fromCents: prices.length ? Math.min(...prices) : 0,
+    // Il «da» davanti al prezzo ha senso solo se esiste davvero un formato più caro.
+    priceVaries: new Set(prices).size > 1,
     categoryName: p.category?.name ?? null,
   };
 }

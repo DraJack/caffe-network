@@ -16,6 +16,7 @@ export function ProductCardSkeleton() {
         <Skeleton className="h-5 w-3/4" />
         <Skeleton className="h-4 w-1/2" />
         <Skeleton className="mt-2 h-6 w-20" />
+        <Skeleton className="mt-1 h-10 w-full rounded-md" />
       </div>
     </div>
   );

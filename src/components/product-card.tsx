@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { formatEuro } from "@/lib/utils";
 import { Badge } from "@/components/ui/card";
 import { ProductImage } from "@/components/ui/product-image";
@@ -9,10 +10,20 @@ type Props = {
   image: string | null;
   origin?: string | null;
   fromCents: number;
+  /** true se le varianti hanno prezzi diversi: solo allora si scrive «da». */
+  priceVaries?: boolean;
   categoryName?: string | null;
 };
 
-export function ProductCard({ slug, name, image, origin, fromCents, categoryName }: Props) {
+export function ProductCard({
+  slug,
+  name,
+  image,
+  origin,
+  fromCents,
+  priceVaries = false,
+  categoryName,
+}: Props) {
   return (
     <Link
       href={`/prodotto/${slug}`}
@@ -35,9 +46,20 @@ export function ProductCard({ slug, name, image, origin, fromCents, categoryName
         </h3>
         {origin && <p className="whitespace-pre-line text-sm text-coffee-500">{origin}</p>}
         <p className="mt-auto pt-3 text-coffee-800">
-          <span className="text-xs text-coffee-500">da </span>
+          {priceVaries && <span className="text-xs text-coffee-500">da </span>}
           <span className="font-heading text-lg font-semibold">{formatEuro(fromCents)}</span>
         </p>
+        {/* Invito all'azione: su mobile non c'è hover, senza questo la card non
+            sembra cliccabile. È uno <span>, non un <button>: l'intera card è già
+            il link, e un elemento interattivo dentro un <a> non è HTML valido.
+            La freccia dice "si va alla pagina", non "aggiunto al carrello". */}
+        <span
+          aria-hidden
+          className="mt-3 inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-md bg-coffee-900 text-sm font-semibold tracking-wide text-cream transition-colors duration-200 group-hover:[background-image:var(--gold-gradient)] group-hover:text-coffee-950"
+        >
+          Acquista
+          <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+        </span>
       </div>
     </Link>
   );
