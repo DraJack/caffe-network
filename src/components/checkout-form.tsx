@@ -61,7 +61,7 @@ export function CheckoutForm(props: Props) {
                 required
               />
               <p className="mt-1.5 text-xs text-coffee-500">
-                Ti inviamo qui la conferma d&apos;ordine.
+                La usiamo solo per contattarti su questo ordine.
               </p>
             </div>
           </Section>

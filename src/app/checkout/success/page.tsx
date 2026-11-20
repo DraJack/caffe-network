@@ -1,24 +1,66 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { CheckCircle2, Package, Truck, Home, Info } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import { stripe, STRIPE_ENABLED } from "@/lib/stripe";
+import { LAST_ORDER_COOKIE } from "@/lib/order-status";
+import { markOrderPaid } from "@/server/orders";
 import { Button } from "@/components/ui/button";
 import { formatEuro } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Ordine confermato" };
 
-type SearchParams = Promise<{ order?: string; demo?: string }>;
+type SearchParams = Promise<{ order?: string; demo?: string; session_id?: string }>;
+
+/**
+ * Il numero d'ordine è progressivo: da solo NON autorizza a vedere il riepilogo
+ * (prima bastava cambiare ?order=1, 2, 3… per leggere gli acquisti altrui).
+ * Lo vede il titolare loggato o il browser che ha appena fatto il checkout.
+ */
+async function loadOwnOrder(orderNumber: number) {
+  if (!Number.isInteger(orderNumber) || orderNumber <= 0) return null;
+  const order = await prisma.order.findUnique({
+    where: { number: orderNumber },
+    include: { items: true, payment: true },
+  });
+  if (!order) return null;
+
+  const [session, store] = await Promise.all([auth(), cookies()]);
+  const isOwner = !!order.userId && session?.user?.id === order.userId;
+  const isThisBrowser = store.get(LAST_ORDER_COOKIE)?.value === order.id;
+  return isOwner || isThisBrowser ? order : null;
+}
+
+/**
+ * Rete di sicurezza se il webhook è in ritardo o non configurato: si chiede a
+ * Stripe lo stato della sessione. markOrderPaid è idempotente, quindi webhook e
+ * pagina di ritorno possono arrivare in qualsiasi ordine.
+ */
+async function confirmWithStripe(orderId: string, sessionId: string | undefined) {
+  if (!STRIPE_ENABLED || !sessionId) return false;
+  try {
+    const s = await stripe.checkout.sessions.retrieve(sessionId);
+    if (s.metadata?.orderId !== orderId || s.payment_status !== "paid") return false;
+    await markOrderPaid(orderId, {
+      sessionId: s.id,
+      paymentIntentId: typeof s.payment_intent === "string" ? s.payment_intent : undefined,
+    });
+    return true;
+  } catch (error) {
+    console.error("Verifica sessione Stripe fallita:", error);
+    return false;
+  }
+}
 
 export default async function SuccessPage({ searchParams }: { searchParams: SearchParams }) {
   const sp = await searchParams;
-  const orderNumber = Number(sp.order);
-
-  const order = Number.isFinite(orderNumber)
-    ? await prisma.order.findUnique({
-        where: { number: orderNumber },
-        include: { items: true },
-      })
-    : null;
+  let order = await loadOwnOrder(Number(sp.order));
+  if (order?.status === "PENDING" && (await confirmWithStripe(order.id, sp.session_id))) {
+    order = await loadOwnOrder(order.number);
+  }
+  const awaitingPayment = order?.status === "PENDING";
 
   return (
     <div className="container-page flex flex-col items-center py-20 text-center">
@@ -33,8 +75,10 @@ export default async function SuccessPage({ searchParams }: { searchParams: Sear
       {order ? (
         <>
           <p className="mt-3 animate-fade-up text-coffee-600" style={{ animationDelay: "80ms" }}>
-            Ordine <strong className="text-coffee-900">#{order.number}</strong> ricevuto. Ti abbiamo
-            inviato una conferma via email.
+            Ordine <strong className="text-coffee-900">#{order.number}</strong>{" "}
+            {awaitingPayment
+              ? "ricevuto: stiamo aspettando la conferma del pagamento, di solito arriva in pochi secondi."
+              : "confermato. Puoi seguirne lo stato dalla sezione I miei ordini."}
           </p>
 
           {/* Cosa succede adesso: senza timeline l'utente resta senza aspettative */}
@@ -42,7 +86,11 @@ export default async function SuccessPage({ searchParams }: { searchParams: Sear
             className="mt-10 flex w-full max-w-lg animate-fade-up items-start justify-between gap-2"
             style={{ animationDelay: "140ms" }}
           >
-            <Step icon={<CheckCircle2 className="h-4 w-4" />} label="Confermato" done />
+            <Step
+              icon={<CheckCircle2 className="h-4 w-4" />}
+              label={awaitingPayment ? "In verifica" : "Confermato"}
+              done={!awaitingPayment}
+            />
             <Divider />
             <Step icon={<Package className="h-4 w-4" />} label="In preparazione" />
             <Divider />
@@ -79,7 +127,9 @@ export default async function SuccessPage({ searchParams }: { searchParams: Sear
           </div>
         </>
       ) : (
-        <p className="mt-3 text-coffee-600">Il tuo ordine è stato registrato.</p>
+        <p className="mt-3 max-w-md text-coffee-600">
+          Il tuo ordine è stato registrato. Accedi al tuo account per vederne il riepilogo.
+        </p>
       )}
 
       {sp.demo === "1" && (

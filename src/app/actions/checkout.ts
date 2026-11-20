@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { stripe, STRIPE_ENABLED } from "@/lib/stripe";
 import { CART_COOKIE } from "@/server/cart";
+import { LAST_ORDER_COOKIE } from "@/lib/order-status";
 import { CheckoutError, createOrderFromCart, markOrderPaid } from "@/server/orders";
 
 const schema = z.object({
@@ -51,8 +52,19 @@ export async function startCheckout(
     return { error: "Non è stato possibile creare l'ordine. Riprova." };
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const items = await prisma.orderItem.findMany({ where: { orderId: order.id } });
+
+  // Chi ha appena ordinato (anche da ospite) può rivedere il riepilogo nella
+  // pagina di conferma; chiunque altro, con il solo numero d'ordine, no.
+  (await cookies()).set(LAST_ORDER_COOKIE, order.id, {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/checkout",
+    maxAge: 60 * 60 * 24,
+    secure: process.env.NODE_ENV === "production",
+  });
 
   // ── Modalità demo: nessuna chiave Stripe reale → evadi subito (ambiente di test) ──
   if (!STRIPE_ENABLED) {

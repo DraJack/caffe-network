@@ -1,5 +1,8 @@
 import type { BadgeProps } from "@/components/ui/card";
 
+/** Ultimo ordine creato da questo browser: autorizza /checkout/success. */
+export const LAST_ORDER_COOKIE = "cn_last_order";
+
 type BadgeVariant = NonNullable<BadgeProps["variant"]>;
 
 /**
