@@ -15,6 +15,25 @@ export const ORDER_STATUS: Record<string, { label: string; variant: BadgeVariant
   CANCELLED: { label: "Annullato", variant: "danger" },
 };
 
+/**
+ * Transizioni ammesse per l'admin. Ogni stato ha effetti collaterali (stock,
+ * provvigioni), quindi un passaggio arbitrario li salterebbe o li duplicherebbe:
+ * PENDING → SHIPPED non scalava lo stock né creava provvigioni, e
+ * CANCELLED → SHIPPED → CANCELLED ripristinava lo stock due volte.
+ * CANCELLED è terminale; non si torna indietro nel ciclo.
+ */
+export const ORDER_TRANSITIONS: Record<string, readonly string[]> = {
+  PENDING: ["PAID", "CANCELLED"],
+  PAID: ["SHIPPED", "DELIVERED", "CANCELLED"],
+  SHIPPED: ["DELIVERED", "CANCELLED"],
+  DELIVERED: ["CANCELLED"],
+  CANCELLED: [],
+};
+
+export function canTransition(from: string, to: string): boolean {
+  return ORDER_TRANSITIONS[from]?.includes(to) ?? false;
+}
+
 export function orderStatus(status: string) {
   return ORDER_STATUS[status] ?? { label: status, variant: "neutral" as BadgeVariant };
 }

@@ -2,7 +2,14 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import { getStoreConfig } from "@/lib/config";
 import { commissionableUnits, computeCommissionSplit, MS_PER_DAY } from "@/lib/commissions";
-import { findUpline } from "@/server/commissions";
+import type { OrderStatus } from "@prisma/client";
+import { formatEuro } from "@/lib/utils";
+import { canTransition } from "@/lib/order-status";
+import {
+  applyDeliveryMaturation,
+  findUpline,
+  recomputeCommissionBalances,
+} from "@/server/commissions";
 
 export type ShippingInput = {
   email: string;
@@ -199,5 +206,141 @@ export async function markOrderPaid(
     });
     // Il default di 5s è troppo stretto: qui c'è lo scarico stock, la risalita
     // dell'upline e fino a 5 righe di provvigione, su un DB serverless.
+  }, { timeout: 15_000, maxWait: 5_000 });
+}
+
+export type StatusChangeResult = { warning?: string | null; error?: string };
+
+/**
+ * Cambia lo stato di un ordine (admin) gestendo gli effetti collaterali.
+ *
+ * PAID       → da PENDING passa per markOrderPaid (pagamento registrato a mano,
+ *              es. bonifico): stock e provvigioni come per un pagamento Stripe.
+ * DELIVERED  → stampa deliveredAt e anticipa la maturazione delle provvigioni.
+ * CANCELLED  → ripristina lo stock e storna le provvigioni non ancora liquidate.
+ *
+ * Solo le transizioni di ORDER_TRANSITIONS sono ammesse. Ritorna un eventuale
+ * avviso per l'admin (provvigioni già pagate da recuperare, rimborso da fare).
+ */
+export async function changeOrderStatus(
+  orderId: string,
+  status: OrderStatus,
+): Promise<StatusChangeResult> {
+  const current = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: { status: true },
+  });
+  if (!current) return { error: "Ordine non trovato" };
+  if (current.status === status) return {};
+  if (!canTransition(current.status, status)) {
+    return { error: `Passaggio non consentito: ${current.status} → ${status}` };
+  }
+
+  if (status === "PAID") {
+    await markOrderPaid(orderId);
+    return { warning: "Pagamento registrato manualmente: stock e provvigioni aggiornati." };
+  }
+
+  return prisma.$transaction(async (tx) => {
+    // Riletto e bloccato dentro la transazione: lo stato può essere cambiato
+    // fra il controllo qui sopra e adesso (due schede admin, un webhook).
+    const locked = await tx.$queryRaw<{ status: OrderStatus }[]>`
+      SELECT status FROM "Order" WHERE id = ${orderId} FOR UPDATE`;
+    const from = locked[0]?.status;
+    if (!from || !canTransition(from, status)) {
+      return { error: "Lo stato dell'ordine è cambiato nel frattempo: ricarica la pagina." };
+    }
+
+    const order = await tx.order.findUniqueOrThrow({
+      where: { id: orderId },
+      select: { id: true, deliveredAt: true, items: true },
+    });
+    let warn: string | null = null;
+
+    if (status === "DELIVERED") {
+      // Idempotente: una seconda consegna non sposta la data originale.
+      const deliveredAt = order.deliveredAt ?? new Date();
+      await tx.order.update({ where: { id: orderId }, data: { deliveredAt } });
+      await applyDeliveryMaturation(tx, orderId, deliveredAt);
+    }
+
+    if (status === "CANCELLED") {
+      // Ripristina lo stock solo se era già stato scalato (cioè da PAID in poi).
+      if (from !== "PENDING") {
+        for (const it of order.items) {
+          if (it.variantId) {
+            await tx.productVariant.update({
+              where: { id: it.variantId },
+              data: { stock: { increment: it.quantity } },
+            });
+          }
+        }
+      }
+
+      // Le righe già PAID NON si stornano: il denaro è uscito davvero e marcarle
+      // REVERSED corromperebbe paidCents. L'admin viene avvisato esplicitamente.
+      const alreadyPaid = await tx.commission.aggregate({
+        where: { orderId, status: "PAID" },
+        _sum: { amountCents: true },
+      });
+      const affected = await tx.commission.findMany({
+        where: { orderId, status: { in: ["PENDING", "APPROVED"] } },
+        select: { accountId: true, payoutRequestId: true },
+      });
+      if (affected.length > 0) {
+        await tx.commission.updateMany({
+          where: { orderId, status: { in: ["PENDING", "APPROVED"] } },
+          data: { status: "REVERSED", payoutRequestId: null, note: "Ordine annullato" },
+        });
+
+        // Una provvigione stornata può trovarsi dentro una richiesta di prelievo
+        // già inviata: senza questo ricalcolo l'admin liquiderebbe un importo
+        // che include righe non più valide.
+        const touchedPayouts = [
+          ...new Set(affected.map((c) => c.payoutRequestId).filter((id): id is string => !!id)),
+        ];
+        for (const payoutId of touchedPayouts) {
+          const payout = await tx.payoutRequest.findUnique({ where: { id: payoutId } });
+          if (!payout || payout.status !== "REQUESTED") continue;
+
+          const remaining = await tx.commission.aggregate({
+            where: { payoutRequestId: payoutId, status: "APPROVED" },
+            _sum: { amountCents: true },
+          });
+          const newAmount = remaining._sum.amountCents ?? 0;
+          if (newAmount === 0) {
+            await tx.payoutRequest.update({
+              where: { id: payoutId },
+              data: {
+                status: "REJECTED",
+                processedAt: new Date(),
+                amountCents: 0,
+                adminNote: "Annullata: tutte le provvigioni collegate sono state stornate.",
+              },
+            });
+          } else {
+            await tx.payoutRequest.update({
+              where: { id: payoutId },
+              data: { amountCents: newAmount },
+            });
+          }
+          warn = `Una richiesta di prelievo aperta è stata ricalcolata a ${formatEuro(newAmount)}.`;
+        }
+
+        await recomputeCommissionBalances(tx, affected.map((c) => c.accountId));
+      }
+
+      const paidCents = alreadyPaid._sum.amountCents ?? 0;
+      if (paidCents > 0) {
+        warn = `${formatEuro(paidCents)} di provvigioni su questo ordine sono già stati liquidati: vanno recuperati manualmente.`;
+      }
+      if (from !== "PENDING") {
+        const refund = "Ricorda di rimborsare il cliente (da Stripe o con bonifico).";
+        warn = warn ? `${warn} ${refund}` : refund;
+      }
+    }
+
+    await tx.order.update({ where: { id: orderId }, data: { status } });
+    return { warning: warn };
   }, { timeout: 15_000, maxWait: 5_000 });
 }
