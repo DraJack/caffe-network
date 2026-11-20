@@ -1,7 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import type { OrderStatus, Role } from "@prisma/client";
+import { Role, type OrderStatus } from "@prisma/client";
+import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/guards";
 import { formatEuro } from "@/lib/utils";
@@ -23,45 +24,73 @@ export async function toggleProductFlag(
   value: boolean,
 ) {
   await requireAdmin();
-  await prisma.product.update({ where: { id: productId }, data: { [field]: value } });
+  const key = z.enum(["active", "featured"]).parse(field);
+  await prisma.product.update({ where: { id: productId }, data: { [key]: value === true } });
   revalidatePath("/admin/prodotti");
 }
 
-export async function updateVariant(variantId: string, priceCents: number, stock: number) {
+const variantSchema = z.object({
+  priceCents: z.number().int().min(1, "Prezzo non valido").max(1_000_000),
+  stock: z.number().int().min(0).max(1_000_000),
+});
+
+export async function updateVariant(
+  variantId: string,
+  priceCents: number,
+  stock: number,
+): Promise<{ error?: string }> {
   await requireAdmin();
-  await prisma.productVariant.update({
-    where: { id: variantId },
-    data: { priceCents: Math.max(0, priceCents), stock: Math.max(0, stock) },
-  });
+  const parsed = variantSchema.safeParse({ priceCents, stock });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dati non validi" };
+  await prisma.productVariant.update({ where: { id: variantId }, data: parsed.data });
   revalidatePath("/admin/prodotti");
+  return {};
 }
 
-export async function updateUserRole(userId: string, role: Role) {
-  await requireAdmin();
-  await prisma.user.update({ where: { id: userId }, data: { role } });
+export async function updateUserRole(userId: string, role: Role): Promise<{ error?: string }> {
+  const admin = await requireAdmin();
+  // Un admin che si toglie il ruolo da solo resta chiuso fuori dal pannello.
+  if (userId === admin.id && role !== "ADMIN") {
+    return { error: "Non puoi rimuovere il ruolo admin a te stesso." };
+  }
+  await prisma.user.update({ where: { id: userId }, data: { role: z.enum(Role).parse(role) } });
   revalidatePath("/admin/utenti");
+  return {};
 }
 
-export async function updateStoreConfig(data: {
-  flatShippingCents: number;
-  freeShippingThreshold: number;
-  commissionL1Cents: number;
-  commissionL2Cents: number;
-  commissionL3Cents: number;
-  commissionL4Cents: number;
-  commissionL5Cents: number;
-  maxCommissionPercent: number;
-  commissionMaturationDays: number;
-  commissionFallbackDays: number;
-  minPayoutCents: number;
-}) {
+const cents = z.number().int().min(0).max(100_000_00);
+const configSchema = z
+  .object({
+    flatShippingCents: cents,
+    freeShippingThreshold: cents,
+    commissionL1Cents: cents,
+    commissionL2Cents: cents,
+    commissionL3Cents: cents,
+    commissionL4Cents: cents,
+    commissionL5Cents: cents,
+    maxCommissionPercent: z.number().int().min(0).max(100, "Il tetto non può superare il 100%"),
+    commissionMaturationDays: z.number().int().min(0).max(365),
+    commissionFallbackDays: z.number().int().min(1).max(365),
+    minPayoutCents: cents,
+  })
+  .refine((c) => c.commissionFallbackDays >= c.commissionMaturationDays, {
+    message: "I giorni di maturazione di riserva devono essere almeno quelli dalla consegna",
+  });
+
+export async function updateStoreConfig(
+  data: z.input<typeof configSchema>,
+): Promise<{ error?: string }> {
   await requireAdmin();
+  const parsed = configSchema.safeParse(data);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dati non validi" };
   await prisma.storeConfig.upsert({
     where: { id: "default" },
-    update: data,
-    create: { id: "default", ...data },
+    update: parsed.data,
+    create: { id: "default", ...parsed.data },
   });
-  revalidatePath("/admin/impostazioni");
+  // Le tariffe compaiono anche in pagine pubbliche (piano, homepage, vetrine).
+  revalidatePath("/", "layout");
+  return {};
 }
 
 /** Segna una richiesta di prelievo come pagata (dopo il bonifico). */

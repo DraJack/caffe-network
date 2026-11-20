@@ -22,7 +22,8 @@ type Config = {
 };
 
 const euro = (cents: number) => (cents / 100).toFixed(2);
-const toCents = (v: string) => Math.round(parseFloat(v) * 100) || 0;
+// Accetta la virgola decimale italiana: prima "4,50" diventava 4,00 €.
+const toCents = (v: string) => Math.round(parseFloat(v.replace(",", ".")) * 100) || 0;
 
 export function ConfigForm({
   config,
@@ -47,6 +48,7 @@ export function ConfigForm({
   });
   const [pending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -61,7 +63,7 @@ export function ConfigForm({
 
   const save = () =>
     startTransition(async () => {
-      await updateStoreConfig({
+      const res = await updateStoreConfig({
         flatShippingCents: toCents(form.flatShipping),
         freeShippingThreshold: toCents(form.freeShipping),
         commissionL1Cents: toCents(form.l1),
@@ -74,6 +76,8 @@ export function ConfigForm({
         commissionFallbackDays: parseInt(form.fallbackDays) || 0,
         minPayoutCents: toCents(form.minPayout),
       });
+      setError(res.error ?? null);
+      if (res.error) return;
       setSaved(true);
       setTimeout(() => setSaved(false), 1500);
     });
@@ -145,6 +149,8 @@ export function ConfigForm({
           <Input value={form.minPayout} onChange={set("minPayout")} />
         </Field>
       </section>
+
+      {error && <p className="text-sm text-red-700">{error}</p>}
 
       <Button onClick={save} disabled={pending} size="lg">
         {pending ? (

@@ -59,10 +59,17 @@ export function VariantEditor({
   const [qty, setQty] = useState(String(stock));
   const [pending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const save = () =>
     startTransition(async () => {
-      await updateVariant(variantId, Math.round(parseFloat(price) * 100) || 0, parseInt(qty) || 0);
+      const res = await updateVariant(
+        variantId,
+        Math.round(parseFloat(price.replace(",", ".")) * 100) || 0,
+        parseInt(qty) || 0,
+      );
+      setError(res.error ?? null);
+      if (res.error) return;
       setSaved(true);
       setTimeout(() => setSaved(false), 1500);
     });
@@ -99,6 +106,7 @@ export function VariantEditor({
           "Salva"
         )}
       </button>
+      {error && <span className="text-xs text-red-700">{error}</span>}
     </div>
   );
 }

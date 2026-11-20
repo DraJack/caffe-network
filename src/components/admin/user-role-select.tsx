@@ -17,7 +17,16 @@ export function UserRoleSelect({ userId, value }: { userId: string; value: Role 
     <select
       defaultValue={value}
       disabled={pending}
-      onChange={(e) => startTransition(() => updateUserRole(userId, e.target.value as Role))}
+      onChange={(e) => {
+        const select = e.currentTarget;
+        startTransition(async () => {
+          const res = await updateUserRole(userId, select.value as Role);
+          if (res.error) {
+            window.alert(res.error);
+            select.value = value;
+          }
+        });
+      }}
       className="rounded-lg border border-coffee-200 bg-white px-2 py-1 text-sm text-coffee-800 disabled:opacity-50"
     >
       {ROLES.map((r) => (
