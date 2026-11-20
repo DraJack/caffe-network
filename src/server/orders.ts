@@ -91,11 +91,21 @@ export async function markOrderPaid(
   const config = await getStoreConfig();
 
   await prisma.$transaction(async (tx) => {
-    const order = await tx.order.findUnique({
+    // Guardia di idempotenza ATOMICA: si "prenota" l'ordine con un update
+    // condizionato. Un findUnique + controllo dello stato non basta: con due
+    // webhook Stripe simultanei (o webhook + fallback) entrambe le transazioni
+    // leggono PENDING in READ COMMITTED e scalano lo stock due volte. Così la
+    // seconda resta bloccata sul lock di riga e poi trova 0 righe aggiornate.
+    const claimed = await tx.order.updateMany({
+      where: { id: orderId, status: "PENDING" },
+      data: { status: "PAID" },
+    });
+    if (claimed.count === 0) return; // già evaso, annullato o inesistente
+
+    const order = await tx.order.findUniqueOrThrow({
       where: { id: orderId },
       include: { items: true },
     });
-    if (!order || order.status !== "PENDING") return; // già evaso o inesistente
 
     // Scala lo stock
     for (const it of order.items) {
@@ -159,7 +169,6 @@ export async function markOrderPaid(
       }
     }
 
-    await tx.order.update({ where: { id: order.id }, data: { status: "PAID" } });
     await tx.payment.update({
       where: { orderId: order.id },
       data: {
