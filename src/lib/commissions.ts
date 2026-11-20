@@ -93,10 +93,13 @@ export function computeCommissionSplit(params: {
     ...r,
     amountCents: Math.floor((r.amountCents * capCents) / gross),
   }));
-  // …poi ridistribuisce i centesimi persi nell'arrotondamento, dal livello 1 in giù.
-  // Il residuo è sempre < numero di livelli, quindi un solo giro basta.
+  // …poi ridistribuisce i centesimi persi nell'arrotondamento, dal livello 1 in giù,
+  // solo ai livelli con tariffa > 0: un livello a 0 € non deve ricevere il centesimo.
+  // Il residuo è < numero di livelli con parte frazionaria (tutti a tariffa > 0),
+  // quindi un solo giro basta.
   let remainder = capCents - scaled.reduce((s, r) => s + r.amountCents, 0);
   for (let i = 0; i < scaled.length && remainder > 0; i++) {
+    if (rows[i].amountCents === 0) continue;
     scaled[i].amountCents += 1;
     remainder -= 1;
   }
