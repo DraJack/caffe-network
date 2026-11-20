@@ -42,3 +42,6 @@ next-env.d.ts
 
 .vercel
 .env*
+
+# Il file di esempio (solo segnaposto, nessun segreto) deve stare nel repo
+!.env.example
