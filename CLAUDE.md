@@ -54,6 +54,7 @@ npm run build        # build di produzione
 npm run start        # avvia il build
 npm run typecheck    # tsc --noEmit
 npm run lint         # eslint
+npm test             # test di src/**/*.test.ts (node:test + tsx, nessuna dipendenza extra)
 
 npm run db:generate  # genera il Prisma Client
 npm run db:migrate   # crea/applica migrazioni (dev)
@@ -118,7 +119,8 @@ src/lib/                    Utilità condivise:
 src/server/                 Logica server (solo lato server):
   catalog.ts                Query catalogo
   cart.ts                   Lettura carrello (cookie + DB)
-  orders.ts                 createOrderFromCart(), markOrderPaid() ← cuore transazionale
+  orders.ts                 createOrderFromCart(), markOrderPaid(), changeOrderStatus() ← cuore transazionale
+  payouts.ts                createPayoutRequest() — lock FOR UPDATE sul conto contro richieste doppie
   commissions.ts            findUpline() e downline via CTE ricorsiva, maturazione, saldi
   referral.ts               resolveSponsorId(), getSponsorPreview(), allocateReferralCode()
   consultant-profile.ts     ensureConsultantProfile() (creazione lazy), slug liberi, getMiniSiteBySlug()
@@ -198,7 +200,9 @@ L'ordine dei prodotti è `Product.position`, assegnato dal seed in base all'ordi
 Se il dato non ha la forma attesa la parte di UI sparisce, la pagina non si rompe. Il selettore
 varianti compare solo con più di una variante. La barra d'acquisto fissa è solo mobile (z-30).
 
-**Ordini:** `PENDING → PAID → SHIPPED → DELIVERED` (o `CANCELLED`).
+**Ordini:** `PENDING → PAID → SHIPPED → DELIVERED` (o `CANCELLED`). Le transizioni ammesse per
+l'admin stanno in `ORDER_TRANSITIONS` (`src/lib/order-status.ts`): `CANCELLED` è terminale e non si
+torna indietro. `PENDING → PAID` a mano passa per `markOrderPaid`.
 - `createOrderFromCart` ricalcola **sempre** i totali lato server e svuota il carrello.
 - `markOrderPaid` è **idempotente** (agisce solo su `PENDING`): scala stock, matura le provvigioni
   dell'upline, chiude il pagamento. Chiamata dal webhook Stripe o dal fallback demo.
@@ -226,9 +230,10 @@ profilo, quindi `ensureConsultantProfile()` lo crea alla prima apertura di `/acc
   le atmosfere, così è strutturalmente impossibile che una diverga per tipografia o spaziature.
   I valori in `src/lib/mini-site.ts` sono **hex grezzi** perché `next/og` renderizza fuori dal
   documento e non vede `globals.css`.
-- **La pagina è cachata** (`revalidate = 3600`), eccezione deliberata a §7: non legge né sessione né
-  cookie. Con una vetrina per utente è ciò che rende sostenibile una scansione degli slug, insieme
-  alla guardia di formato prima della query.
+- **La pagina dichiara `revalidate = 3600`** e di suo non legge né sessione né cookie, ma ⚠️ oggi
+  **non è davvero cachata**: l'header del layout chiama `auth()`, che rende dinamiche tutte le
+  pagine (il build la segna ƒ). Per attivare la cache va reso client-side il blocco account
+  dell'header. Resta la guardia di formato prima della query.
 - **`noindex, follow`.** Migliaia di pagine quasi identiche sono il pattern delle doorway page.
   ⚠️ **Non aggiungere `Disallow: /c/` a un robots.txt**: bloccherebbe anche i crawler di WhatsApp e
   Twitter, azzerando l'anteprima del link — cioè il senso stesso della funzionalità.
