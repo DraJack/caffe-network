@@ -18,19 +18,30 @@ export function parseSpecs(raw: Prisma.JsonValue | null): ProductSpec[] {
   );
 }
 
+/**
+ * Dati della card prodotto (catalogo, homepage, mini-siti).
+ * ⚠️ Nessun prezzo, di proposito: si vede solo nella pagina prodotto. Non riaggiungerlo
+ * qui senza una decisione commerciale esplicita.
+ */
 function toCard(p: Prisma.ProductGetPayload<{ include: { variants: true; category: true } }>) {
-  const prices = p.variants.map((v) => v.priceCents);
+  // Il formato che la pagina prodotto preseleziona (il più economico): da qui i pezzi
+  // mostrati in card, così card e pagina parlano della stessa confezione.
+  const preselected = p.variants.reduce<(typeof p.variants)[number] | null>(
+    (best, v) => (!best || v.priceCents < best.priceCents ? v : best),
+    null,
+  );
   return {
     slug: p.slug,
     name: p.name,
     image: p.images[0] ?? null,
     origin: p.origin,
-    fromCents: prices.length ? Math.min(...prices) : 0,
-    // Il «da» davanti al prezzo ha senso solo se esiste davvero un formato più caro.
-    priceVaries: new Set(prices).size > 1,
+    roastLevel: p.roastLevel,
+    packName: preselected?.name ?? null,
     categoryName: p.category?.name ?? null,
   };
 }
+
+export type CatalogCard = ReturnType<typeof toCard>;
 
 export async function getFeaturedProducts(limit = 4) {
   const products = await prisma.product.findMany({

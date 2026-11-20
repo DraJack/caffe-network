@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getStoreConfig } from "@/lib/config";
-import { machineLabel, parseBlend, parsePack } from "@/lib/product";
+import { blendName, machineLabel, parseBlend, parsePack } from "@/lib/product";
 import { productFaqs } from "@/lib/product-faq";
 import { referralPathUrl } from "@/lib/referral";
 import { getMachineOptions, getProductBySlug, parseSpecs } from "@/server/catalog";
@@ -67,8 +67,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         <div className="space-y-4">
           <TrustBadges freeShippingThresholdCents={config.freeShippingThreshold} />
           <BlendSheet
-            // "Gran Crema — Cialde compatibili …" → "Gran Crema"
-            blendName={product.name.includes("—") ? product.name.split("—")[0].trim() : null}
+            blendName={blendName(product.name)}
             blend={blend}
             roast={product.roastLevel}
             specs={parseSpecs(product.specs)}

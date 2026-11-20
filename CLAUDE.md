@@ -34,6 +34,13 @@ ma la sua *logica* verrà attivata più avanti, senza rifacimenti.
 - **Stripe** (test mode) — Checkout Session + webhook; con **fallback demo** se le chiavi non sono configurate
 - Deploy target: **Vercel**
 
+> ⚠️ **`npm run dev` usa webpack (`next dev --webpack`), non Turbopack.** Su questa macchina
+> Windows Turbopack (Next 16.2.10) alla prima compilazione lancia worker PostCSS/Tailwind in loop
+> (`node .next/dev/build/*.js`) senza mai chiuderli: migliaia di `node.exe`, RAM esaurita, VS Code
+> in crash (novembre 2026). Con webpack restano ~3 processi. Non togliere il flag senza aver
+> verificato che il bug sia risolto in una versione più nuova di Next. Il build di produzione
+> (Vercel, Linux) non è toccato.
+
 > Nota: Prisma è volutamente fissato alla **v6** (la v7 richiede driver adapter e `prisma.config.ts`).
 > Non aggiornare a Prisma 7 senza migrare la configurazione datasource.
 
@@ -170,6 +177,11 @@ mostrato in evidenza. Le foto stanno in `public/images/prodotti/` (banner **3:2*
 pagina prodotto sono 3:2, non quadrate). `ProductVariant.image` dà una foto per formato (cialde
 44 vs 38 mm); se manca si usa `Product.images[0]`. I prezzi di esempio in `/consulenti` e
 `/admin/impostazioni` si leggono dal catalogo con `getReferencePackCents()`.
+**Le card prodotto (catalogo, homepage, mini-siti) non mostrano il prezzo**, per scelta
+commerciale: si vede solo nella pagina prodotto. `toCard()` non lo espone proprio. Fa eccezione
+`/consulenti`, dove il prezzo di riferimento serve alla trasparenza del piano (§8).
+Nei testi non scrivere che «il caffè è lo stesso in ogni confezione» (suona sminuente):
+la miscela si presenta per i suoi pregi, il formato è la scelta del cliente.
 L'ordine dei prodotti è `Product.position`, assegnato dal seed in base all'ordine dell'array
 (homepage = i primi 4 `featured`): cialde Frog 44 e 38, poi Lavazza Firma e Blue, poi il resto.
 

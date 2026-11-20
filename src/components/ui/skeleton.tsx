@@ -11,12 +11,11 @@ export function ProductCardSkeleton() {
   return (
     <div className="overflow-hidden rounded-2xl border border-coffee-100 bg-white shadow-(--shadow-soft)">
       <Skeleton className="aspect-[3/2] rounded-none" />
-      <div className="flex flex-col gap-2 p-4">
-        <Skeleton className="h-4 w-16" />
+      <div className="flex flex-col gap-2 p-4 sm:p-5">
+        <Skeleton className="h-3 w-20" />
         <Skeleton className="h-5 w-3/4" />
         <Skeleton className="h-4 w-1/2" />
-        <Skeleton className="mt-2 h-6 w-20" />
-        <Skeleton className="mt-1 h-10 w-full rounded-md" />
+        <Skeleton className="mt-4 h-10 w-full rounded-lg" />
       </div>
     </div>
   );

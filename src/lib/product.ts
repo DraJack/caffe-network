@@ -40,6 +40,12 @@ export function machineLabel(productName: string): string {
   return productName.replace(/^.*?—\s*/, "").trim() || productName;
 }
 
+/** "Gran Crema — Cialde compatibili …" → "Gran Crema". Senza trattino: null. */
+export function blendName(productName: string): string | null {
+  if (!productName.includes("—")) return null;
+  return productName.split("—")[0].trim() || null;
+}
+
 export type BlendPart = { percent: number; name: string };
 
 /**
