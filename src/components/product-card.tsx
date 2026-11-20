@@ -67,7 +67,7 @@ export function ProductCard({ slug, name, image, packName, categoryName }: Props
             aria-hidden
             className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-lg bg-coffee-900 text-sm font-semibold tracking-wide text-cream transition-all duration-300 group-hover:[background-image:var(--gold-gradient)] group-hover:text-coffee-950 group-hover:shadow-(--shadow-accent)"
           >
-            Scopri
+            Acquista
             <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
           </span>
         </div>
