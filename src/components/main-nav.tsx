@@ -3,7 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { LogOut, Menu, X } from "lucide-react";
+import { logout } from "@/app/actions/logout";
 import { cn } from "@/lib/utils";
 
 export const NAV_LINKS: [string, string][] = [
@@ -150,6 +151,19 @@ export function MobileNav({ isLoggedIn }: { isLoggedIn: boolean }) {
               >
                 Carrello
               </Link>
+
+              {/* Non passa da /account: se quella pagina va in errore
+                  (es. sessione orfana) l'utente deve poter uscire lo stesso. */}
+              {isLoggedIn && (
+                <form action={logout}>
+                  <button
+                    type="submit"
+                    className="flex w-full items-center gap-2 rounded-xl px-4 py-3 text-left text-base font-medium text-coffee-100 transition-colors hover:bg-coffee-800 hover:text-red-400"
+                  >
+                    <LogOut className="h-5 w-5" /> Esci
+                  </button>
+                </form>
+              )}
             </nav>
           </div>
         </div>
